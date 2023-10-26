@@ -7,10 +7,12 @@ import requests
 def main():
     # if create_database():
         # print(f"Table created successfully!")
+
     # if insert_fake_users():
     #     print(f"Fake users inserted successfully!")
     # else:
     #     print(f"Failed to insert fake users!")
+
     get_users()
 
 
@@ -19,9 +21,10 @@ num_fake_users = 4
 
 
 def insert_fake_users():
-    try:
-        cursor = get_cursor()
+    conn = get_connection()
+    cursor = get_cursor()
 
+    try:
         # Generate and insert fake user data
         fake = Faker()
         for _ in range(num_fake_users):
@@ -31,13 +34,14 @@ def insert_fake_users():
                 'likes': fake.random_int(min=0, max=1000),
                 'posts': fake.random_int(min=0, max=100)
             }
-            cursor.execute(f'''
+            print('user_data: ', user_data)
+            conn.execute(f'''
                 INSERT INTO {table_name} (name, image, likes, posts)
-                VALUES (:name, :image, :likes, :posts);
-            ''', user_data)
+                VALUES (? , ? , ? , ?);
+            ''', (user_data['name'], user_data['image'], user_data['likes'], user_data['posts']))
 
-        # Commit the changes to the database
-        get_connection().commit()
+            # Commit the changes to the database
+            conn.commit()
 
         cursor.close()
         return True
@@ -47,7 +51,7 @@ def insert_fake_users():
         return False
 
 
-api_url = 'http://127.0.0.1:5000/api/users'
+api_url = 'http://0.0.0.0:8000/api/users'
 
 def get_users():
     try:
@@ -55,6 +59,7 @@ def get_users():
 
         if response.status_code == 200:
             users = response.json()
+            print(f"users: \n {users}")
             print("Users:")
             for user in users:
                 print(f"ID: {user['id']}, Name: {user['name']}, Image: {user['image']}, Likes: {user['likes']}, Posts: {user['posts']}")

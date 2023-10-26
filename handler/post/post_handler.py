@@ -7,8 +7,10 @@ post_bp = Blueprint('post', __name__)
 
 @post_bp.route('/api/posts', methods=['GET'])
 def get_posts():
+    conn = get_connection()
+    cursor = get_cursor()
+
     try:
-        cursor = get_cursor()
 
         cursor.execute("SELECT * FROM posts")
         posts = [dict(row) for row in cursor.fetchall()]
@@ -20,4 +22,4 @@ def get_posts():
 
     finally:
         cursor.close()
-        get_connection().close()
+        conn.close()

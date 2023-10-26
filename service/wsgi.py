@@ -14,7 +14,7 @@ from prometheus_client import multiprocess
 from config.logger import (
     prepare_logging_config
 )
-from constants import (
+from service.constants import (
     APP_LOG_LEVEL_ENV_KEY,
     SERVER_LOG_LEVEL_ENV_KEY, 
     API_ERROR_UNHANDELED,

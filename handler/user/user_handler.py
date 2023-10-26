@@ -7,11 +7,15 @@ user_bp = Blueprint('user', __name__)
 
 @user_bp.route('/api/users', methods=['GET'])
 def get_users():
-    try:
-        cursor = get_cursor()
+    conn = get_connection()
+    cursor = get_cursor()
 
-        cursor.execute("SELECT * FROM your_table_name")
+    try:
+
+        cursor.execute("SELECT * FROM USERS")
         users = [dict(row) for row in cursor.fetchall()]
+
+        print('jsonify(users): ', jsonify(users))
 
         return jsonify(users)
 
@@ -20,11 +24,14 @@ def get_users():
 
     finally:
         cursor.close()
-        get_connection().close()
+        conn.close()
 
 
 @user_bp.route('/api/users/<int:user_id>/posts', methods=['GET'])
 def get_user_posts(user_id):
+    conn = get_connection()
+    cursor = get_cursor()
+
     try:
         cursor = get_cursor()
 
@@ -38,4 +45,4 @@ def get_user_posts(user_id):
 
     finally:
         cursor.close()
-        get_connection().close()
+        conn.close()
