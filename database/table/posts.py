@@ -1,4 +1,4 @@
-from database.connections import get_connection, get_cursor
+from database.connections import get_cursor
 from database.constants import *
 
 
@@ -10,7 +10,7 @@ def create_posts_table():
                                     createdAt DATETIME NOT NULL,
                                     description TEXT,
                                     image TEXT,
-                                    isActive BOOLEAN NOT NULL,
+                                    activityLevel REAL NOT NULL,
                                     isDeleted BOOLEAN NOT NULL,
                                     title TEXT NOT NULL,
                                     updatedAt DATETIME,
@@ -29,7 +29,7 @@ def create_post_likes_table():
     try:
         get_cursor().execute(f'''
                                 CREATE TABLE IF NOT EXISTS {post_likes_table_name} (
-                                    postId TEXT,
+                                    postId INTEGER,
                                     userId INTEGER,
                                     PRIMARY KEY (postId, userId),
                                     FOREIGN KEY (postId) REFERENCES Posts(id),
@@ -47,8 +47,8 @@ def create_post_categories_table():
     try:
         get_cursor().execute(f'''
                                 CREATE TABLE IF NOT EXISTS {post_categories_table_name} (
-                                    postId TEXT,
-                                    categoryId TEXT,
+                                    postId INTEGER,
+                                    categoryId INTEGER,
                                     PRIMARY KEY (postId, categoryId),
                                     FOREIGN KEY (postId) REFERENCES Posts(id),
                                     FOREIGN KEY (categoryId) REFERENCES Category(id)

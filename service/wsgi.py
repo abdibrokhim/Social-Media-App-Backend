@@ -1,7 +1,8 @@
+import os
 import json
 import logging.config
-import os
-
+from werkzeug.exceptions import HTTPException
+from flask_jwt_extended import JWTManager
 import structlog
 from dotenv import load_dotenv, find_dotenv
 from flask import Flask
@@ -16,13 +17,16 @@ from config.logger import (
 )
 from service.constants import (
     APP_LOG_LEVEL_ENV_KEY,
-    SERVER_LOG_LEVEL_ENV_KEY, 
+    SERVER_LOG_LEVEL_ENV_KEY,
     API_ERROR_UNHANDELED,
 )
+from helper.api_types import create_error_return
 from handler.user import user_handler
 from handler.post import post_handler
-from helper.api_types import create_error_return
-from werkzeug.exceptions import HTTPException
+from handler.category import category_handler
+
+
+
 
 
 def setup_logging():
@@ -65,6 +69,8 @@ load_dotenv(find_dotenv())
 
 setup_logging()
 app = init_app()
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'jwt-secret-string')
+jwt = JWTManager(app)
 cors = CORS(app)
 
 
@@ -94,4 +100,6 @@ def metrics():
 
 app.register_blueprint(user_handler.user_bp)
 app.register_blueprint(post_handler.post_bp)
+app.register_blueprint(category_handler.category_bp)
 app.register_error_handler(400, handle_bad_request)
+

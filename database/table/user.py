@@ -1,4 +1,4 @@
-from database.connections import get_connection, get_cursor
+from database.connections import get_cursor
 from database.constants import *
 
 
@@ -7,12 +7,13 @@ def create_user_table():
         get_cursor().execute(f'''
                                 CREATE TABLE IF NOT EXISTS {user_table_name} (
                                     id INTEGER PRIMARY KEY,
-                                    firstName TEXT NOT NULL,
-                                    lastName TEXT NOT NULL,
+                                    firstName TEXT
+                                    lastName TEXT
                                     username TEXT NOT NULL UNIQUE,
                                     profileImage TEXT,
                                     email TEXT NOT NULL UNIQUE,
-                                    isActive BOOLEAN NOT NULL,
+                                    password TEXT NOT NULL,
+                                    activityLevel REAL NOT NULL,
                                     isDeleted BOOLEAN NOT NULL,
                                     isEmailValidated BOOLEAN NOT NULL,
                                     createdAt DATETIME NOT NULL,
@@ -31,7 +32,10 @@ def create_user_meta_info_table():
     try:
         get_cursor().execute(f'''
                                 CREATE TABLE IF NOT EXISTS {user_meta_info_table_name} (
-                                    id TEXT PRIMARY KEY,
+                                    id INTEGER PRIMARY KEY,
+                                    followers INTEGER,
+                                    following INTEGER,
+                                    likes INTEGER,
                                     userId INTEGER,
                                     FOREIGN KEY (userId) REFERENCES User(id)
                                 );
@@ -47,7 +51,7 @@ def create_social_media_links_table():
     try:
         get_cursor().execute(f'''
                                 CREATE TABLE IF NOT EXISTS {social_media_links_table_name} (
-                                    id TEXT PRIMARY KEY,
+                                    id INTEGER PRIMARY KEY,
                                     icon TEXT,
                                     name TEXT NOT NULL,
                                     url TEXT NOT NULL,
@@ -67,7 +71,7 @@ def create_user_interests_table():
         get_cursor().execute(f'''
                                 CREATE TABLE IF NOT EXISTS {user_interests_table_name} (
                                     userId INTEGER,
-                                    categoryId TEXT,
+                                    categoryId INTEGER,
                                     PRIMARY KEY (userId, categoryId),
                                     FOREIGN KEY (userId) REFERENCES User(id),
                                     FOREIGN KEY (categoryId) REFERENCES Category(id)

@@ -42,6 +42,16 @@ cp .env.example .env
 gunicorn --logger-class=config.logger.GunicornLogger service.wsgi:app --bind 0.0.0.0:8000 --workers=1
 ```
 
-`I will leave database as it is, so you can test it.`
+`I will leave/push database as it is, so you can test it.`
 
-**Important:** `Do not modify or modify and not push the code if you not sure what you are doing.`
+**Important:** `Do not modify or modify and push the changes to another branch, if you are not sure what you did.`
+
+
+### How to push to new branch
+
+```bash
+git checkout -b <branch-name>
+git add .
+git commit -m "your commit message"
+git push origin <branch-name>
+```
