@@ -26,9 +26,6 @@ from handler.post import post_handler
 from handler.category import category_handler
 
 
-
-
-
 def setup_logging():
     """
       Setup logging with struct log

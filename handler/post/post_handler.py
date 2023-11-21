@@ -164,6 +164,7 @@ def get_posts_by_category(category_id):
         conn.close()
 
 @post_bp.route('/api/posts/made-for-you/<int:user_id>', methods=['GET'])
+@jwt_required()
 def get_made_for_you_posts(user_id):
     conn = get_connection()
     cursor = conn.cursor()
@@ -187,7 +188,7 @@ def get_made_for_you_posts(user_id):
             SELECT p.* FROM Posts p
             JOIN PostCategories pc ON p.id = pc.postId
             JOIN Users u ON p.userId = u.id
-            WHERE pc.categoryId IN ({}) AND p.activityLevel > 0 AND u.activityLevel > 0
+            WHERE pc.categoryId IN ({}) AND p.activityLevel > 0 AND u.activityLevel > 0 AND p.isDeleted = 0
             ORDER BY p.activityLevel DESC, u.activityLevel DESC
         """.format(','.join('?' * len(category_ids)))
 
@@ -214,7 +215,7 @@ def get_explore_posts():
         # Fetch trending posts based on likes and activity level
         cursor.execute("""
             SELECT p.* FROM Posts p
-            WHERE p.activityLevel > 0
+            WHERE p.activityLevel > 0 AND p.isDeleted = 0
             ORDER BY p.likes DESC, p.activityLevel DESC
             LIMIT 10
         """)
@@ -223,7 +224,7 @@ def get_explore_posts():
         # Fetch new content
         cursor.execute("""
             SELECT * FROM Posts
-            WHERE activityLevel > 0
+            WHERE activityLevel > 0 AND isDeleted = 0
             ORDER BY createdAt DESC
             LIMIT 10
         """)
@@ -234,7 +235,7 @@ def get_explore_posts():
             SELECT p.*, c.name AS category_name FROM Posts p
             JOIN PostCategories pc ON p.id = pc.postId
             JOIN Categories c ON pc.categoryId = c.id
-            WHERE p.activityLevel > 0
+            WHERE p.activityLevel > 0 AND p.isDeleted = 0
             GROUP BY c.id
             ORDER BY RANDOM()
             LIMIT 10

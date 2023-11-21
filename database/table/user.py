@@ -82,3 +82,18 @@ def create_user_interests_table():
     except Exception as e:
         print(e)
         return False
+
+def create_revoked_tokens_table():
+    try:
+        get_cursor().execute(f'''
+                                CREATE TABLE {revoked_tokens_table_name} (
+                                    jti TEXT PRIMARY KEY,
+                                    revoked_at DATETIME NOT NULL
+                                );
+                            ''')
+        get_cursor().close()
+        return True
+    except Exception as e:
+        print(e)
+        return False
+

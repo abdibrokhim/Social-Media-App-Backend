@@ -1,66 +1,20 @@
 from flask_bcrypt import Bcrypt
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import (
+    create_access_token,
+    create_refresh_token,
+    jwt_required,
+    get_jwt,
+    current_user,
+    get_jwt_identity,
+)
 from flask import Blueprint, jsonify, request
 import sqlite3
 from database.connections import get_cursor, get_connection
 from datetime import datetime
+from user_model import User
 
 user_bp = Blueprint('user', __name__)
 bcrypt = Bcrypt()
-
-@user_bp.route('/api/register', methods=['POST'])
-def register():
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    username = request.json.get('username')
-    email = request.json.get('email')
-    password = request.json.get('password')
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-
-    try:
-        cursor.execute("""
-            INSERT INTO Users (username, email, password, activityLevel, isDeleted, isEmailValidated, createdAt) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (username, email, hashed_password, 1, 0, 0, datetime.now()))
-        conn.commit()
-        return jsonify({'message': 'User registered successfully'}), 201
-
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-    finally:
-        cursor.close()
-        conn.close()
-
-@user_bp.route('/api/login', methods=['POST'])
-def login():
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    username = request.json.get('username')
-    password = request.json.get('password')
-
-    try:
-        cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
-        user = cursor.fetchone()
-        if user and bcrypt.check_password_hash(user['password'], password):
-            access_token = create_access_token(identity=username)
-            return jsonify(access_token=access_token)
-
-        return jsonify({'error': 'Invalid username or password'}), 401
-    
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-    finally:
-        cursor.close()
-        conn.close()
 
 @user_bp.route('/api/users/<int:user_id>', methods=['GET'])
 def get_user_by_id(user_id):
@@ -106,8 +60,6 @@ def get_user_by_id(user_id):
 
         return jsonify(user_data)
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -160,8 +112,6 @@ def get_user_by_username(username):
 
         return jsonify(user_data)
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -205,8 +155,6 @@ def update_user(user_id):
         conn.commit()
         return jsonify({'message': 'User updated successfully'})
     
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -229,8 +177,6 @@ def delete_user(user_id):
 
         return jsonify({'message': 'User deleted successfully'}), 200
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -250,8 +196,6 @@ def get_all_users():
 
         return jsonify(users)
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -270,8 +214,6 @@ def get_user_posts(user_id):
 
         return jsonify(posts)
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -292,8 +234,6 @@ def get_user_meta_info(user_id):
             return jsonify(dict(user_meta_info))
         return jsonify({'message': 'UserMetaInfo not found'}), 404
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -314,8 +254,6 @@ def get_user_social_media_links(user_id):
             return jsonify(dict(user_meta_info))
         return jsonify({'message': 'SocialMediaLinks not found'}), 404
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -361,8 +299,6 @@ def update_specific_social_media_link(user_id, link_id):
         conn.commit()
         return jsonify({'message': 'Social media link updated successfully'})
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -389,8 +325,6 @@ def delete_specific_social_media_link(user_id, link_id):
         conn.commit()
         return jsonify({'message': 'Social media link deleted successfully'})
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -417,8 +351,6 @@ def add_social_media_link(user_id):
 
         return jsonify({'message': 'Social media link added successfully'}), 201
 
-    except sqlite3.IntegrityError:
-        return jsonify({'error': 'This social media link already exists for the user'}), 409
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -439,8 +371,6 @@ def add_interest(user_id):
         conn.commit()
         return jsonify({'message': 'Interest added successfully'}), 201
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Interest already exists or invalid category'}), 409
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
