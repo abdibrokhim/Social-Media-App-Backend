@@ -11,24 +11,11 @@ from flask_jwt_extended import (
 import sqlite3
 from database.connections import get_connection
 from datetime import datetime
-from service.wsgi import jwt
+from handler.query_helpers import execute_query
 
 auth_bp = Blueprint("auth", __name__)
 bcrypt = Bcrypt()
 
-def execute_query(query, params=(), fetchone=False, commit=False):
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute(query, params)
-        if commit:
-            conn.commit()
-        return cursor.fetchone() if fetchone else cursor
-    except sqlite3.Error as e:
-        raise e
-    finally:
-        cursor.close()
-        conn.close()
 
 @auth_bp.route('/api/register', methods=['POST'])
 def register():
@@ -39,6 +26,10 @@ def register():
         existing_user = execute_query("SELECT id FROM Users WHERE email = ?", (data['email'],), fetchone=True)
         if existing_user:
             return jsonify({'error': 'User with this email already exists'}), 409
+        
+        existing_user = execute_query("SELECT id FROM Users WHERE username = ?", (data['username'],), fetchone=True)
+        if existing_user:
+            return jsonify({'error': 'User with this username already exists'}), 409
 
         user_id = execute_query("""
             INSERT INTO Users (username, email, password, activityLevel, isDeleted, isEmailValidated, createdAt) 
@@ -54,7 +45,7 @@ def register():
 
     except sqlite3.Error as e:
         return jsonify({'error': str(e)}), 500
-
+    
 @auth_bp.route('/api/login', methods=['POST'])
 def login():
     data = request.json
@@ -71,7 +62,7 @@ def login():
     except sqlite3.Error as e:
         return jsonify({'error': str(e)}), 500
 
-@auth_bp.get("/api/new_access_token")
+@auth_bp.route("/api/new_access_token", methods=["GET"])
 @jwt_required(refresh=True)
 def refresh_access():
     try:
@@ -82,27 +73,18 @@ def refresh_access():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@auth_bp.get('/api/logout')
+@auth_bp.route('/api/logout', methods=['GET'])
 @jwt_required(verify_type=False)
 def logout_user():
     try:
         jti = get_jwt()['jti']
-        execute_query("INSERT INTO revoked_tokens (jti, revoked_at) VALUES (?, ?)", (jti, datetime.now()), commit=True)
+        execute_query("INSERT INTO RevokedTokens (jti, revoked_at) VALUES (?, ?)", (jti, datetime.now()), commit=True)
         return jsonify({"message": "Token revoked successfully"}), 200
 
     except sqlite3.Error as e:
         return jsonify({"error": str(e)}), 500
 
-@jwt.token_in_blocklist_loader
-def check_if_token_revoked(jwt_header, jwt_payload):
-    jti = jwt_payload["jti"]
-    try:
-        token = execute_query("SELECT * FROM revoked_tokens WHERE jti = ?", (jti,), fetchone=True)
-        return token is not None
-    except sqlite3.Error:
-        return False
-
-@auth_bp.get("/api/me")
+@auth_bp.route("/api/me", methods=["GET"])
 @jwt_required()
 def whoami():
     try:
@@ -115,3 +97,18 @@ def whoami():
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+def get_revoked_token(jti):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT * FROM RevokedTokens WHERE jti = ?", (jti,))
+        token = cursor.fetchone()
+        return token
+    except Exception as e:
+        print(f"Error fetching revoked token: {e}")
+        return None
+    finally:
+        cursor.close()
+        conn.close()

@@ -7,8 +7,8 @@ def create_user_table():
         get_cursor().execute(f'''
                                 CREATE TABLE IF NOT EXISTS {user_table_name} (
                                     id INTEGER PRIMARY KEY,
-                                    firstName TEXT
-                                    lastName TEXT
+                                    firstName TEXT,
+                                    lastName TEXT,
                                     username TEXT NOT NULL UNIQUE,
                                     profileImage TEXT,
                                     email TEXT NOT NULL UNIQUE,

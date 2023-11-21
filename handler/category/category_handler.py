@@ -1,110 +1,64 @@
 from flask import Blueprint, jsonify, request
-from database.connections import get_cursor, get_connection
 from datetime import datetime
-import sqlite3
+from handler.query_helpers import execute_query
 
 category_bp = Blueprint('category', __name__)
 
 @category_bp.route('/api/categories', methods=['GET'])
 def get_categories():
-    conn = get_connection()
-    cursor = get_cursor()
-
     try:
-        cursor.execute("SELECT * FROM Category WHERE isDeleted = 0")
+        cursor = execute_query("SELECT * FROM Categories WHERE isDeleted = 0")
         categories = [dict(row) for row in cursor.fetchall()]
+        cursor.close()
         return jsonify(categories)
-
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-    finally:
-        cursor.close()
-        conn.close()
 
 @category_bp.route('/api/categories/<int:category_id>', methods=['GET'])
 def get_category_by_id(category_id):
-    conn = get_connection()
-    cursor = get_cursor()
-
     try:
-        cursor.execute("SELECT * FROM Category WHERE id = ? AND isDeleted = 0", (category_id,))
-        category = cursor.fetchone()
+        category = execute_query("SELECT * FROM Categories WHERE id = ? AND isDeleted = 0", (category_id,), fetchone=True)
         if category:
             return jsonify(dict(category))
         return jsonify({'message': 'Category not found'}), 404
-
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-    finally:
-        cursor.close()
-        conn.close()
 
 @category_bp.route('/api/categories', methods=['POST'])
 def create_category():
-    conn = get_connection()
-    cursor = get_cursor()
-
     new_category = request.json
     try:
-        cursor.execute("""
-            INSERT INTO Category (id, createdAt, name, isDeleted) 
-            VALUES (?, ?, ?, ?)
-        """, (new_category['id'], datetime.now(), new_category['name'], 0))
-        conn.commit()
-        return jsonify({'message': 'Category created successfully'}), 201
+        category_exists = execute_query("SELECT id FROM Categories WHERE name = ?", (new_category['name'],), fetchone=True)
+        if category_exists:
+            return jsonify({'error': 'Category with this name already exists'}), 409
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
+        execute_query("""
+            INSERT INTO Categories (createdAt, name, isDeleted) 
+            VALUES (?, ?, ?)
+        """, (datetime.now(), new_category['name'], 0), commit=True)
+        return jsonify({'message': 'Category created successfully'}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    finally:
-        cursor.close()
-        conn.close()
-
-@category_bp.route('/api/categories/<category_id>', methods=['PUT'])
+@category_bp.route('/api/categories/<int:category_id>', methods=['PATCH'])
 def update_category(category_id):
-    conn = get_connection()
-    cursor = get_cursor()
-
     updated_category = request.json
     try:
-        cursor.execute("""
-            UPDATE Category SET name = ? WHERE id = ?
-        """, (updated_category['name'], category_id))
-        conn.commit()
+        category_exists = execute_query("SELECT id FROM Categories WHERE id = ? AND isDeleted = 0", (category_id,), fetchone=True)
+        if not category_exists:
+            return jsonify({'error': 'Category not found'}), 404
+
+        execute_query("""
+            UPDATE Categories SET name = ? WHERE id = ?
+        """, (updated_category['name'], category_id), commit=True)
         return jsonify({'message': 'Category updated successfully'})
-
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    finally:
-        cursor.close()
-        conn.close()
-
-@category_bp.route('/api/categories/<category_id>', methods=['DELETE'])
+@category_bp.route('/api/categories/<int:category_id>', methods=['DELETE'])
 def delete_category(category_id):
-    conn = get_connection()
-    cursor = get_cursor()
-
     try:
-        cursor.execute("UPDATE Category SET isDeleted = 1 WHERE id = ?", (category_id,))
-        conn.commit()
+        execute_query("UPDATE Categories SET isDeleted = 1 WHERE id = ?", (category_id,), commit=True)
         return jsonify({'message': 'Category deleted successfully'})
-
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-    finally:
-        cursor.close()
-        conn.close()

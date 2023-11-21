@@ -1,18 +1,24 @@
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required
 from database.connections import get_cursor, get_connection
 import sqlite3
 from datetime import datetime
+from flask_jwt_extended import (
+    current_user,
+    jwt_required,
+    get_jwt,
+    get_jwt_identity
+)
+from handler.query_helpers import execute_query
 
 post_bp = Blueprint('post', __name__)
 
 @post_bp.route('/api/posts', methods=['GET'])
 def get_posts():
     conn = get_connection()
-    cursor = get_cursor()
+    cursor = conn.cursor()
 
     try:
-        cursor.execute("SELECT * FROM posts WHERE isDeleted = 0")
+        cursor.execute("SELECT * FROM Posts WHERE isDeleted = 0")
         posts = [dict(row) for row in cursor.fetchall()]
         return jsonify(posts)
 
@@ -54,14 +60,16 @@ def get_post_by_id(post_id):
 @jwt_required()
 def create_post():
     conn = get_connection()
-    cursor = get_cursor()
+    cursor = conn.cursor()
 
     new_post = request.json
+    user_id = get_jwt_identity()
+
     try:
         cursor.execute("""
-            INSERT INTO posts (id, createdAt, description, image, activityLevel, isDeleted, title, userId) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (new_post['id'], datetime.now(), new_post['description'], new_post['image'], 1, 0, new_post['title'], new_post['userId']))
+            INSERT INTO Posts (createdAt, description, image, activityLevel, isDeleted, title, userId) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (datetime.now(), new_post['description'], new_post['image'], 1, 0, new_post['title'], user_id))
         conn.commit()
         return jsonify({'message': 'Post created successfully'}), 201
     
@@ -74,7 +82,7 @@ def create_post():
         cursor.close()
         conn.close()
 
-@post_bp.route('/api/posts/<post_id>', methods=['PUT'])
+@post_bp.route('/api/posts/<post_id>', methods=['PATCH'])
 @jwt_required()
 def update_post(post_id):
     conn = get_connection()
@@ -103,7 +111,7 @@ def update_post(post_id):
 
     update_values.append(post_id)  # Add post_id at the end for the WHERE clause
 
-    update_query = "UPDATE posts SET " + ", ".join(update_fields) + " WHERE id = ?"
+    update_query = "UPDATE Posts SET " + ", ".join(update_fields) + " WHERE id = ?"
 
     try:
         cursor.execute(update_query, tuple(update_values))
@@ -126,7 +134,7 @@ def delete_post(post_id):
     cursor = get_cursor()
 
     try:
-        cursor.execute("UPDATE posts SET isDeleted = 1 WHERE id = ?", (post_id,))
+        cursor.execute("UPDATE Posts SET isDeleted = 1 WHERE id = ?", (post_id,))
         conn.commit()
         return jsonify({'message': 'Post deleted successfully'})
 
