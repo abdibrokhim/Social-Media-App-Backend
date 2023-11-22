@@ -4,8 +4,8 @@ from database.constants import *
 
 def create_categories_table():
     try:
-        get_cursor().execute(f'''
-                                CREATE TABLE IF NOT EXISTS {categories_table_name} (
+        get_cursor().execute('''
+                                CREATE TABLE IF NOT EXISTS Categories (
                                     id INTEGER PRIMARY KEY,
                                     createdAt DATETIME NOT NULL,
                                     name TEXT NOT NULL,

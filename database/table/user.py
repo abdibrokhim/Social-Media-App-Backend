@@ -4,8 +4,8 @@ from database.constants import *
 
 def create_user_table():
     try:
-        get_cursor().execute(f'''
-                                CREATE TABLE IF NOT EXISTS {user_table_name} (
+        get_cursor().execute('''
+                                CREATE TABLE IF NOT EXISTS Users (
                                     id INTEGER PRIMARY KEY,
                                     firstName TEXT,
                                     lastName TEXT,
@@ -30,14 +30,14 @@ def create_user_table():
 
 def create_user_meta_info_table():
     try:
-        get_cursor().execute(f'''
-                                CREATE TABLE IF NOT EXISTS {user_meta_info_table_name} (
+        get_cursor().execute('''
+                                CREATE TABLE IF NOT EXISTS UserMetaInfo (
                                     id INTEGER PRIMARY KEY,
                                     followers INTEGER,
                                     following INTEGER,
                                     likes INTEGER,
                                     userId INTEGER,
-                                    FOREIGN KEY (userId) REFERENCES User(id)
+                                    FOREIGN KEY (userId) REFERENCES Users(id)
                                 );
                             ''')
         get_cursor().close()
@@ -49,14 +49,14 @@ def create_user_meta_info_table():
 
 def create_social_media_links_table():
     try:
-        get_cursor().execute(f'''
-                                CREATE TABLE IF NOT EXISTS {social_media_links_table_name} (
+        get_cursor().execute('''
+                                CREATE TABLE IF NOT EXISTS SocialMediaLinks (
                                     id INTEGER PRIMARY KEY,
                                     icon TEXT,
                                     name TEXT NOT NULL,
                                     url TEXT NOT NULL,
                                     userId INTEGER,
-                                    FOREIGN KEY (userId) REFERENCES User(id)
+                                    FOREIGN KEY (userId) REFERENCES Users(id)
                                 );
                             ''')
         get_cursor().close()
@@ -68,13 +68,13 @@ def create_social_media_links_table():
 
 def create_user_interests_table():
     try:
-        get_cursor().execute(f'''
-                                CREATE TABLE IF NOT EXISTS {user_interests_table_name} (
+        get_cursor().execute('''
+                                CREATE TABLE IF NOT EXISTS UserInterests (
                                     userId INTEGER,
                                     categoryId INTEGER,
                                     PRIMARY KEY (userId, categoryId),
-                                    FOREIGN KEY (userId) REFERENCES User(id),
-                                    FOREIGN KEY (categoryId) REFERENCES Category(id)
+                                    FOREIGN KEY (userId) REFERENCES Users(id),
+                                    FOREIGN KEY (categoryId) REFERENCES Categories(id)
                                 );
                             ''')
         get_cursor().close()
@@ -85,8 +85,8 @@ def create_user_interests_table():
 
 def create_revoked_tokens_table():
     try:
-        get_cursor().execute(f'''
-                                CREATE TABLE {revoked_tokens_table_name} (
+        get_cursor().execute('''
+                                CREATE TABLE RevokedTokens (
                                     jti TEXT PRIMARY KEY,
                                     revoked_at DATETIME NOT NULL
                                 );

@@ -53,7 +53,7 @@ def login():
     try:
         user = execute_query("SELECT * FROM Users WHERE username = ?", (data['username'],), fetchone=True)
         if user and bcrypt.check_password_hash(user['password'], data['password']):
-            access_token = create_access_token(identity=data['username'])
+            access_token = create_access_token(identity=data['username'], fresh=True, expires_delta=False)
             refresh_token = create_refresh_token(identity=data['username'])
             return jsonify(access_token=access_token, refresh_token=refresh_token), 200
 
@@ -61,6 +61,25 @@ def login():
     
     except sqlite3.Error as e:
         return jsonify({'error': str(e)}), 500
+
+
+# TODO: Implement api endpoint to update sensitive info: email and password
+# @auth_bp.route('/api/users', methods=['POST'])
+# def update_sensitive_info():
+#     data = request.json
+
+#     try:
+#         user = execute_query("SELECT * FROM Users WHERE username = ?", (data['username'],), fetchone=True)
+#         if user and bcrypt.check_password_hash(user['password'], data['password']):
+#             access_token = create_access_token(identity=data['username'], fresh=True, expires_delta=False)
+#             refresh_token = create_refresh_token(identity=data['username'])
+#             return jsonify(access_token=access_token, refresh_token=refresh_token), 200
+
+#         return jsonify({'error': 'Invalid username or password'}), 401
+    
+#     except sqlite3.Error as e:
+#         return jsonify({'error': str(e)}), 500
+
 
 @auth_bp.route("/api/new_access_token", methods=["GET"])
 @jwt_required(refresh=True)
@@ -88,12 +107,7 @@ def logout_user():
 @jwt_required()
 def whoami():
     try:
-        return jsonify({
-                "user_details": {
-                    "username": current_user.username,
-                    "email": current_user.email,
-                },
-            })
+        return jsonify({"user": current_user.sub,})
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500

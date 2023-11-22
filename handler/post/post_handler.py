@@ -14,79 +14,63 @@ post_bp = Blueprint('post', __name__)
 
 @post_bp.route('/api/posts', methods=['GET'])
 def get_posts():
-    conn = get_connection()
-    cursor = conn.cursor()
 
     try:
-        cursor.execute("SELECT * FROM Posts WHERE isDeleted = 0")
+        cursor = execute_query("SELECT * FROM Posts WHERE isDeleted = 0")
         posts = [dict(row) for row in cursor.fetchall()]
         return jsonify(posts)
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    finally:
-        cursor.close()
-        conn.close()
-
 @post_bp.route('/api/posts/<int:post_id>', methods=['GET'])
 def get_post_by_id(post_id):
-    conn = get_connection()
-    cursor = get_cursor()
+
 
     try:
         # Increment the activity level count
-        cursor.execute("UPDATE Posts SET activityLevel = activityLevel + 1 WHERE id = ?", (post_id,))
-        conn.commit()
+        execute_query("UPDATE Posts SET activityLevel = activityLevel + 1 WHERE id = ?", (post_id,), commit=True)
 
-        cursor.execute("SELECT * FROM Posts WHERE id = ? AND isDeleted = 0", (post_id,))
-        post = cursor.fetchone()
+        post = execute_query("SELECT * FROM Posts WHERE id = ? AND isDeleted = 0", (post_id,), fetchone=True)
         if post:
             return jsonify(dict(post))
         return jsonify({'message': 'Post not found'}), 404
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    finally:
-        cursor.close()
-        conn.close()
 
 @post_bp.route('/api/posts', methods=['POST'])
 @jwt_required()
 def create_post():
-    conn = get_connection()
-    cursor = conn.cursor()
 
     new_post = request.json
-    user_id = get_jwt_identity()
+    username = get_jwt_identity()
 
     try:
-        cursor.execute("""
+        user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+        post_id = execute_query("""
             INSERT INTO Posts (createdAt, description, image, activityLevel, isDeleted, title, userId) 
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (datetime.now(), new_post['description'], new_post['image'], 1, 0, new_post['title'], user_id))
-        conn.commit()
+        """, (datetime.now(), new_post['description'], new_post['image'], 1, 0, new_post['title'], user_id), commit=True).lastrowid
+
+        # Add post categories
+        for category in new_post['categories']:
+            category_id = category['categoryId']
+            execute_query("""
+                INSERT INTO PostCategories (postId, categoryId)
+                VALUES (?, ?)
+            """, (post_id, category_id), commit=True)
+
         return jsonify({'message': 'Post created successfully'}), 201
     
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-    finally:
-        cursor.close()
-        conn.close()
 
 @post_bp.route('/api/posts/<post_id>', methods=['PATCH'])
 @jwt_required()
 def update_post(post_id):
-    conn = get_connection()
-    cursor = get_cursor()
 
     updated_post = request.json
     update_fields = []
@@ -114,47 +98,103 @@ def update_post(post_id):
     update_query = "UPDATE Posts SET " + ", ".join(update_fields) + " WHERE id = ?"
 
     try:
-        cursor.execute(update_query, tuple(update_values))
-        conn.commit()
+        execute_query(update_query, tuple(update_values), commit=True)
         return jsonify({'message': 'Post updated successfully'})
     
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    finally:
-        cursor.close()
-        conn.close()
+
+@post_bp.route('/api/posts/<int:post_id>/like', methods=['POST'])
+@jwt_required()
+def like_post(post_id):
+
+    username = get_jwt_identity()
+
+    try:
+        user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+        # We will think about this later: whether add like count to Posts table or not
+        # Increment the post's like count
+        # execute_query("UPDATE Posts SET likes = likes + 1 WHERE id = ?", (post_id,), commit=True)
+
+        execute_query("INSERT INTO PostLikes (postId, userId) VALUES (?, ?)", (post_id, user_id), commit=True)
+
+        return jsonify({'message': 'Post liked successfully'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@post_bp.route('/api/posts/<int:post_id>/unlike', methods=['POST'])
+@jwt_required()
+def unlike_post(post_id):
+    
+        username = get_jwt_identity()
+    
+        try:
+            user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+    
+            # We will think about this later: whether add like count to Posts table or not
+            # Decrement the post's like count
+            # execute_query("UPDATE Posts SET likes = likes - 1 WHERE id = ?", (post_id,), commit=True)
+    
+            execute_query("DELETE FROM PostLikes WHERE postId = ? AND userId = ?", (post_id, user_id), commit=True)
+    
+            return jsonify({'message': 'Post unliked successfully'})
+    
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+
+@post_bp.route('/api/posts/<int:post_id>/likes', methods=['GET'])
+def get_post_likes(post_id):
+    
+        try:
+            cursor = execute_query("SELECT COUNT(*) AS likes FROM PostLikes WHERE postId = ?", (post_id,))
+            likes = cursor.fetchone()['likes']
+            return jsonify({'likes': likes})
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+
+@post_bp.route('/api/posts/<int:post_id>/liked-users', methods=['GET'])
+def get_post_liked_users(post_id):
+    try:
+        # Query to get the list of users who liked the post along with their username and profile image
+        users_cursor = execute_query("""
+            SELECT u.id AS userId, u.username, u.profileImage FROM PostLikes pl
+            JOIN Users u ON pl.userId = u.id
+            WHERE pl.postId = ?
+        """, (post_id,))
+        users = [dict(row) for row in users_cursor.fetchall()]
+
+        return jsonify({"users": users})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @post_bp.route('/api/posts/<post_id>', methods=['DELETE'])
 @jwt_required()
 def delete_post(post_id):
-    conn = get_connection()
-    cursor = get_cursor()
 
     try:
-        cursor.execute("UPDATE Posts SET isDeleted = 1 WHERE id = ?", (post_id,))
-        conn.commit()
+        execute_query("UPDATE Posts SET isDeleted = 1 WHERE id = ?", (post_id,), commit=True)
         return jsonify({'message': 'Post deleted successfully'})
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    finally:
-        cursor.close()
-        conn.close()
+# TODO: Implement api endpoint to get all deleted posts
 
-@post_bp.route('/api/posts/category/<category_id>', methods=['GET'])
+@post_bp.route('/api/posts/category/<int:category_id>', methods=['GET'])
 def get_posts_by_category(category_id):
-    conn = get_connection()
-    cursor = get_cursor()
+
 
     try:
         # A many-to-many relationship with a junction table named PostCategories
-        cursor.execute("""
+        cursor = execute_query("""
             SELECT p.* FROM Posts p
             JOIN PostCategories pc ON p.id = pc.postId
             WHERE pc.categoryId = ? AND p.isDeleted = 0
@@ -162,31 +202,26 @@ def get_posts_by_category(category_id):
         posts = [dict(row) for row in cursor.fetchall()]
         return jsonify(posts)
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    finally:
-        cursor.close()
-        conn.close()
+
 
 @post_bp.route('/api/posts/made-for-you/<int:user_id>', methods=['GET'])
 @jwt_required()
 def get_made_for_you_posts(user_id):
-    conn = get_connection()
-    cursor = conn.cursor()
 
     try:
         # Fetch user interests
-        cursor.execute("""
+        cursor = execute_query("""
             SELECT categoryId FROM UserInterests WHERE userId = ?
         """, (user_id,))
         interests = cursor.fetchall()
 
         # If user has no interests, return an empty list
         if not interests:
-            return jsonify([])
+            return get_explore_posts()
 
         # Convert interests to a list of category IDs
         category_ids = [interest['categoryId'] for interest in interests]
@@ -200,28 +235,24 @@ def get_made_for_you_posts(user_id):
             ORDER BY p.activityLevel DESC, u.activityLevel DESC
         """.format(','.join('?' * len(category_ids)))
 
-        cursor.execute(query, category_ids)
+        cursor = execute_query(query, category_ids)
         posts = [dict(row) for row in cursor.fetchall()]
 
         return jsonify(posts)
     
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    finally:
-        cursor.close()
-        conn.close()
+
 
 @post_bp.route('/api/posts/explore', methods=['GET'])
 def get_explore_posts():
-    conn = get_connection()
-    cursor = conn.cursor()
+
 
     try:
         # Fetch trending posts based on likes and activity level
-        cursor.execute("""
+        cursor = execute_query("""
             SELECT p.* FROM Posts p
             WHERE p.activityLevel > 0 AND p.isDeleted = 0
             ORDER BY p.likes DESC, p.activityLevel DESC
@@ -230,7 +261,7 @@ def get_explore_posts():
         trending_posts = [dict(row) for row in cursor.fetchall()]
 
         # Fetch new content
-        cursor.execute("""
+        cursor = execute_query("""
             SELECT * FROM Posts
             WHERE activityLevel > 0 AND isDeleted = 0
             ORDER BY createdAt DESC
@@ -239,7 +270,7 @@ def get_explore_posts():
         new_posts = [dict(row) for row in cursor.fetchall()]
 
         # Fetch posts from diverse categories
-        cursor.execute("""
+        cursor = execute_query("""
             SELECT p.*, c.name AS category_name FROM Posts p
             JOIN PostCategories pc ON p.id = pc.postId
             JOIN Categories c ON pc.categoryId = c.id
@@ -255,11 +286,8 @@ def get_explore_posts():
 
         return jsonify(explore_posts)
 
-    except sqlite3.IntegrityError as e:
-        return jsonify({'error': 'Database integrity error'}), 500
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    finally:
-        cursor.close()
-        conn.close()
+

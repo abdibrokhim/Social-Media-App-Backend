@@ -105,6 +105,7 @@ def get_user_by_username(username):
         return jsonify({'error': str(e)}), 500
 
 
+# TODO: Check whether user exists before updating
 @user_bp.route('/api/users/<int:user_id>', methods=['PATCH'])
 @jwt_required()
 def update_user(user_id):
@@ -157,6 +158,7 @@ def delete_user(user_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# TODO: Implement api endpoint to get all deleted posts
 
 @user_bp.route('/api/users', methods=['GET'])
 def get_all_users():
@@ -269,21 +271,26 @@ def delete_specific_social_media_link(user_id, link_id):
 @user_bp.route('/api/users/<int:user_id>/social-media-links', methods=['POST'])
 @jwt_required()
 def add_social_media_link(user_id):
-
-    icon = request.json.get('icon')
-    name = request.json.get('name')
-    url = request.json.get('url')
+    socials_data = request.json  # Expecting a list of dictionaries with 'categoryId'
 
     try:
         # Check if user exists
         user_exists = execute_query("SELECT id FROM Users WHERE id = ? AND isDeleted = 0", (user_id,), fetchone=True)
         if user_exists is None:
             return jsonify({'error': 'User not found'}), 404
-    
-        execute_query("""
-            INSERT INTO SocialMediaLinks (icon, name, url, userId) 
-            VALUES (?, ?, ?, ?)
-        """, (icon, name, url, user_id), commit=True)
+
+        for social in socials_data:
+            icon = social.get('icon')
+            name = social.get('name')
+            url = social.get('url')
+
+            if url is None:
+                return jsonify({'error': 'URL is required'}), 400
+
+            execute_query("""
+                INSERT INTO SocialMediaLinks (icon, name, url, userId) 
+                VALUES (?, ?, ?, ?)
+            """, (icon, name, url, user_id), commit=True)
 
         return jsonify({'message': 'Social media link added successfully'}), 201
 

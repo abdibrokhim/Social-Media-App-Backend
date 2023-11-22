@@ -62,3 +62,5 @@ def delete_category(category_id):
         return jsonify({'message': 'Category deleted successfully'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# TODO: Implement api endpoint to get all deleted posts

@@ -4,9 +4,9 @@ from database.constants import *
 
 def create_posts_table():
     try:
-        get_cursor().execute(f'''
-                                CREATE TABLE IF NOT EXISTS {posts_table_name} (
-                                    id TEXT PRIMARY KEY,
+        get_cursor().execute('''
+                                CREATE TABLE IF NOT EXISTS Posts (
+                                    id INTEGER PRIMARY KEY,
                                     createdAt DATETIME NOT NULL,
                                     description TEXT,
                                     image TEXT,
@@ -15,7 +15,7 @@ def create_posts_table():
                                     title TEXT NOT NULL,
                                     updatedAt DATETIME,
                                     userId INTEGER,
-                                    FOREIGN KEY (userId) REFERENCES User(id)
+                                    FOREIGN KEY (userId) REFERENCES Users(id)
                                 );
                             ''')
         get_cursor().close()
@@ -27,13 +27,13 @@ def create_posts_table():
 
 def create_post_likes_table():
     try:
-        get_cursor().execute(f'''
-                                CREATE TABLE IF NOT EXISTS {post_likes_table_name} (
+        get_cursor().execute('''
+                                CREATE TABLE IF NOT EXISTS PostLikes (
                                     postId INTEGER,
                                     userId INTEGER,
                                     PRIMARY KEY (postId, userId),
                                     FOREIGN KEY (postId) REFERENCES Posts(id),
-                                    FOREIGN KEY (userId) REFERENCES User(id)
+                                    FOREIGN KEY (userId) REFERENCES Users(id)
                                 );
                             ''')
         get_cursor().close()
@@ -45,13 +45,13 @@ def create_post_likes_table():
 
 def create_post_categories_table():
     try:
-        get_cursor().execute(f'''
-                                CREATE TABLE IF NOT EXISTS {post_categories_table_name} (
+        get_cursor().execute('''
+                                CREATE TABLE IF NOT EXISTS PostCategories (
                                     postId INTEGER,
                                     categoryId INTEGER,
                                     PRIMARY KEY (postId, categoryId),
                                     FOREIGN KEY (postId) REFERENCES Posts(id),
-                                    FOREIGN KEY (categoryId) REFERENCES Category(id)
+                                    FOREIGN KEY (categoryId) REFERENCES Categories(id)
                                 );
                             ''')
         get_cursor().close()
