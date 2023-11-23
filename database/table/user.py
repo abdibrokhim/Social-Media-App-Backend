@@ -97,3 +97,19 @@ def create_revoked_tokens_table():
         print(e)
         return False
 
+def create_user_follow_table():
+    try:
+        get_cursor().execute('''
+                                CREATE TABLE IF NOT EXISTS UserFollowers (
+                                    followerId INTEGER,
+                                    followingId INTEGER,
+                                    PRIMARY KEY (followerId, followingId),
+                                    FOREIGN KEY (followerId) REFERENCES Users(id),
+                                    FOREIGN KEY (followingId) REFERENCES Users(id)
+                                );
+                            ''')
+        get_cursor().close()
+        return True
+    except Exception as e:
+        print(e)
+        return False

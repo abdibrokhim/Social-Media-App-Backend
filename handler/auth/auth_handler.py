@@ -63,7 +63,7 @@ def login():
         return jsonify({'error': str(e)}), 500
 
 
-# TODO: Implement api endpoint to update sensitive info: email and password
+# TODO: Implement api endpoint to update sensitive info: email or password
 # @auth_bp.route('/api/users', methods=['POST'])
 # def update_sensitive_info():
 #     data = request.json

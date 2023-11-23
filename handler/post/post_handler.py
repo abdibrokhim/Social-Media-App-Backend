@@ -114,10 +114,6 @@ def like_post(post_id):
     try:
         user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
 
-        # We will think about this later: whether add like count to Posts table or not
-        # Increment the post's like count
-        # execute_query("UPDATE Posts SET likes = likes + 1 WHERE id = ?", (post_id,), commit=True)
-
         execute_query("INSERT INTO PostLikes (postId, userId) VALUES (?, ?)", (post_id, user_id), commit=True)
 
         return jsonify({'message': 'Post liked successfully'})
@@ -133,10 +129,6 @@ def unlike_post(post_id):
     
         try:
             user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
-    
-            # We will think about this later: whether add like count to Posts table or not
-            # Decrement the post's like count
-            # execute_query("UPDATE Posts SET likes = likes - 1 WHERE id = ?", (post_id,), commit=True)
     
             execute_query("DELETE FROM PostLikes WHERE postId = ? AND userId = ?", (post_id, user_id), commit=True)
     
@@ -186,7 +178,18 @@ def delete_post(post_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# TODO: Implement api endpoint to get all deleted posts
+
+@post_bp.route('/api/posts/deleted', methods=['GET'])
+def get_deleted_posts():
+    
+        try:
+            cursor = execute_query("SELECT * FROM Posts WHERE isDeleted = 1")
+            posts = [dict(row) for row in cursor.fetchall()]
+            return jsonify(posts)
+    
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
 
 @post_bp.route('/api/posts/category/<int:category_id>', methods=['GET'])
 def get_posts_by_category(category_id):
@@ -206,13 +209,18 @@ def get_posts_by_category(category_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
-
-@post_bp.route('/api/posts/made-for-you/<int:user_id>', methods=['GET'])
+# TODO: refactor this endpoint. It should return a list of posts every time except that already was returned
+@post_bp.route('/api/posts/made-for-you', methods=['GET'])
 @jwt_required()
-def get_made_for_you_posts(user_id):
+def get_made_for_you_posts():
+    limit = request.args.get('limit', 10, type=int)
+    last_post_id = request.args.get('last_post_id', type=int)
 
     try:
+        # Fetch user
+        username = get_jwt_identity()
+        user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
         # Fetch user interests
         cursor = execute_query("""
             SELECT categoryId FROM UserInterests WHERE userId = ?
@@ -221,33 +229,41 @@ def get_made_for_you_posts(user_id):
 
         # If user has no interests, return an empty list
         if not interests:
-            return get_explore_posts()
+            return get_explore_posts(limit=limit)
 
         # Convert interests to a list of category IDs
         category_ids = [interest['categoryId'] for interest in interests]
 
-        # Fetch posts related to these interests and sort by activity level
+        # Prepare the SQL query
         query = """
             SELECT p.* FROM Posts p
             JOIN PostCategories pc ON p.id = pc.postId
             JOIN Users u ON p.userId = u.id
             WHERE pc.categoryId IN ({}) AND p.activityLevel > 0 AND u.activityLevel > 0 AND p.isDeleted = 0
-            ORDER BY p.activityLevel DESC, u.activityLevel DESC
         """.format(','.join('?' * len(category_ids)))
+
+        # Add condition for pagination
+        if last_post_id:
+            query += " AND p.id > ?"
+            category_ids.append(last_post_id)
+
+        # Add ordering and limit
+        query += " ORDER BY p.activityLevel DESC, u.activityLevel DESC LIMIT ?"
+        category_ids.append(limit)
 
         cursor = execute_query(query, category_ids)
         posts = [dict(row) for row in cursor.fetchall()]
 
         return jsonify(posts)
-    
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
 
-@post_bp.route('/api/posts/explore', methods=['GET'])
-def get_explore_posts():
+
+@post_bp.route('/api/posts/explore/<int:limit>', methods=['GET'])
+def get_explore_posts(limit):
 
 
     try:
@@ -256,8 +272,8 @@ def get_explore_posts():
             SELECT p.* FROM Posts p
             WHERE p.activityLevel > 0 AND p.isDeleted = 0
             ORDER BY p.likes DESC, p.activityLevel DESC
-            LIMIT 10
-        """)
+            LIMIT = ?
+        """, (limit,))
         trending_posts = [dict(row) for row in cursor.fetchall()]
 
         # Fetch new content
@@ -265,8 +281,8 @@ def get_explore_posts():
             SELECT * FROM Posts
             WHERE activityLevel > 0 AND isDeleted = 0
             ORDER BY createdAt DESC
-            LIMIT 10
-        """)
+            LIMIT = ?
+        """, (limit,))
         new_posts = [dict(row) for row in cursor.fetchall()]
 
         # Fetch posts from diverse categories
@@ -277,8 +293,8 @@ def get_explore_posts():
             WHERE p.activityLevel > 0 AND p.isDeleted = 0
             GROUP BY c.id
             ORDER BY RANDOM()
-            LIMIT 10
-        """)
+            LIMIT = ?
+        """, (limit,))
         diverse_posts = [dict(row) for row in cursor.fetchall()]
 
         # Combine all posts into a single list

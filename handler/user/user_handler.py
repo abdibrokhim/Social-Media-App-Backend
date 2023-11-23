@@ -158,7 +158,19 @@ def delete_user(user_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# TODO: Implement api endpoint to get all deleted posts
+# api endpoint to get all deleted users
+@user_bp.route('/api/users/deleted', methods=['GET'])
+def get_all_deleted_users():
+    
+        try:
+            cursor = execute_query("SELECT * FROM Users WHERE isDeleted = 1")
+            users = [dict(row) for row in cursor.fetchall()]
+    
+            return jsonify(users)
+    
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
 
 @user_bp.route('/api/users', methods=['GET'])
 def get_all_users():
@@ -325,6 +337,55 @@ def delete_interest(user_id, category_id):
             return jsonify({'message': 'Interest not found'}), 404
 
         return jsonify({'message': 'Interest deleted successfully'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@user_bp.route('/api/users/<int:user_id>/follow', methods=['POST'])
+@jwt_required()
+def follow_user(user_id):
+    follower_id = get_jwt_identity()
+
+    try:
+        # Check if user exists
+        user_exists = execute_query("SELECT id FROM Users WHERE id = ? AND isDeleted = 0", (user_id,), fetchone=True)
+        if user_exists is None:
+            return jsonify({'error': 'User not found'}), 404
+
+        # Check if user is already followed
+        is_followed = execute_query("SELECT * FROM Followers WHERE userId = ? AND followerId = ?", (user_id, follower_id), fetchone=True)
+        if is_followed:
+            return jsonify({'error': 'User is already followed'}), 400
+
+        # Follow user, here user_id is the user being followed and follower_id is the user following
+        execute_query("INSERT INTO Followers (userId, followerId) VALUES (?, ?)", (user_id, follower_id), commit=True)
+
+        return jsonify({'message': 'User followed successfully'}), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+@user_bp.route('/api/users/<int:user_id>/follow', methods=['DELETE'])
+@jwt_required()
+def unfollow_user(user_id):
+    follower_id = get_jwt_identity()
+
+    try:
+        # Check if user exists
+        user_exists = execute_query("SELECT id FROM Users WHERE id = ? AND isDeleted = 0", (user_id,), fetchone=True)
+        if user_exists is None:
+            return jsonify({'error': 'User not found'}), 404
+
+        # Check if user is already followed
+        is_followed = execute_query("SELECT * FROM UserFollowers WHERE followingId = ? AND followerId = ?", (user_id, follower_id), fetchone=True)
+        if not is_followed:
+            return jsonify({'error': 'User is not followed'}), 400
+
+        # Unfollow user, here followingId is the user being followed and followerId is the user following
+        execute_query("DELETE FROM UserFollowers WHERE followingId = ? AND followerId = ?", (user_id, follower_id), commit=True)
+
+        return jsonify({'message': 'User unfollowed successfully'})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
