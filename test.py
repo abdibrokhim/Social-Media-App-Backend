@@ -10,25 +10,28 @@ import json
 
 
 def create_tables():
-    if create_user_table():
-        print("User table created successfully")
-    if create_user_meta_info_table():
-        print("User meta info table created successfully")
-    if create_user_interests_table():
-        print("User interests table created successfully")
-    if create_social_media_links_table():
-        print("Social media links table created successfully")
-    if create_revoked_tokens_table():
-        print("Revoked tokens table created successfully")
-    if create_categories_table():
-        print("Categories table created successfully")
-    if create_posts_table():
-        print("Posts table created successfully")
-    if create_post_likes_table():
-        print("Post likes table created successfully")
-    if create_post_categories_table():
-        print("Post categories table created successfully")
+    # if create_user_table():
+    #     print("User table created successfully")
+    # if create_user_meta_info_table():
+    #     print("User meta info table created successfully")
+    # if create_user_interests_table():
+    #     print("User interests table created successfully")
+    # if create_social_media_links_table():
+    #     print("Social media links table created successfully")
+    # if create_revoked_tokens_table():
+    #     print("Revoked tokens table created successfully")
+    # if create_categories_table():
+    #     print("Categories table created successfully")
+    # if create_posts_table():
+    #     print("Posts table created successfully")
+    # if create_post_likes_table():
+    #     print("Post likes table created successfully")
+    # if create_post_categories_table():
+    #     print("Post categories table created successfully")
+    if create_user_follow_table():
+        print("User follow table created successfully")
     pass
+
 
 
 

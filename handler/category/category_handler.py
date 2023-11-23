@@ -4,6 +4,7 @@ from handler.query_helpers import execute_query
 
 category_bp = Blueprint('category', __name__)
 
+
 @category_bp.route('/api/categories', methods=['GET'])
 def get_categories():
     try:
@@ -14,6 +15,7 @@ def get_categories():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @category_bp.route('/api/categories/<int:category_id>', methods=['GET'])
 def get_category_by_id(category_id):
     try:
@@ -23,6 +25,7 @@ def get_category_by_id(category_id):
         return jsonify({'message': 'Category not found'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @category_bp.route('/api/categories', methods=['POST'])
 def create_category():
@@ -40,6 +43,7 @@ def create_category():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @category_bp.route('/api/categories/<int:category_id>', methods=['PATCH'])
 def update_category(category_id):
     updated_category = request.json
@@ -55,6 +59,7 @@ def update_category(category_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @category_bp.route('/api/categories/<int:category_id>', methods=['DELETE'])
 def delete_category(category_id):
     try:
@@ -63,4 +68,13 @@ def delete_category(category_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# TODO: Implement api endpoint to get all deleted posts
+
+@category_bp.route('/api/categories/deleted', methods=['GET'])
+def get_deleted_categories():
+    try:
+        cursor = execute_query("SELECT * FROM Categories WHERE isDeleted = 1")
+        categories = [dict(row) for row in cursor.fetchall()]
+        cursor.close()
+        return jsonify(categories)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

@@ -345,33 +345,47 @@ def delete_interest(user_id, category_id):
 @user_bp.route('/api/users/<int:user_id>/follow', methods=['POST'])
 @jwt_required()
 def follow_user(user_id):
-    follower_id = get_jwt_identity()
+    # user_id => user being followed
+    # follower_id => user following
+
+    username = get_jwt_identity()
 
     try:
+        follower_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
         # Check if user exists
         user_exists = execute_query("SELECT id FROM Users WHERE id = ? AND isDeleted = 0", (user_id,), fetchone=True)
         if user_exists is None:
             return jsonify({'error': 'User not found'}), 404
 
         # Check if user is already followed
-        is_followed = execute_query("SELECT * FROM Followers WHERE userId = ? AND followerId = ?", (user_id, follower_id), fetchone=True)
+        is_followed = execute_query("SELECT * FROM UserFollowers WHERE followingId = ? AND followerId = ?", (user_id, follower_id), fetchone=True)
         if is_followed:
             return jsonify({'error': 'User is already followed'}), 400
 
-        # Follow user, here user_id is the user being followed and follower_id is the user following
-        execute_query("INSERT INTO Followers (userId, followerId) VALUES (?, ?)", (user_id, follower_id), commit=True)
+        # Follow user, here user_id is the user being following's id and follower_id is the follower's id
+        execute_query("INSERT INTO UserFollowers (followingId, followerId) VALUES (?, ?)", (user_id, follower_id), commit=True)
+
+        # Increment the follower count
+        execute_query("UPDATE UserMetaInfo SET followers = followers + 1 WHERE userId = ?", (user_id,), commit=True)
+
+        # Increment the following count
+        execute_query("UPDATE UserMetaInfo SET following = following + 1 WHERE userId = ?", (follower_id,), commit=True)
 
         return jsonify({'message': 'User followed successfully'}), 201
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-@user_bp.route('/api/users/<int:user_id>/follow', methods=['DELETE'])
+@user_bp.route('/api/users/<int:user_id>/unfollow', methods=['DELETE'])
 @jwt_required()
 def unfollow_user(user_id):
-    follower_id = get_jwt_identity()
+    
+    username = get_jwt_identity()
 
     try:
+        follower_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+        
         # Check if user exists
         user_exists = execute_query("SELECT id FROM Users WHERE id = ? AND isDeleted = 0", (user_id,), fetchone=True)
         if user_exists is None:
@@ -384,6 +398,12 @@ def unfollow_user(user_id):
 
         # Unfollow user, here followingId is the user being followed and followerId is the user following
         execute_query("DELETE FROM UserFollowers WHERE followingId = ? AND followerId = ?", (user_id, follower_id), commit=True)
+
+        # Decrement the follower count
+        execute_query("UPDATE UserMetaInfo SET followers = followers - 1 WHERE userId = ?", (user_id,), commit=True)
+
+        # Decrement the following count
+        execute_query("UPDATE UserMetaInfo SET following = following - 1 WHERE userId = ?", (follower_id,), commit=True)
 
         return jsonify({'message': 'User unfollowed successfully'})
 

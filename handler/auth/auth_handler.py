@@ -107,22 +107,19 @@ def logout_user():
 @jwt_required()
 def whoami():
     try:
-        return jsonify({"user": current_user.sub,})
+        user_identity = get_jwt_identity()
+
+        return jsonify({"user": user_identity})
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 def get_revoked_token(jti):
-    conn = get_connection()
-    cursor = conn.cursor()
 
     try:
-        cursor.execute("SELECT * FROM RevokedTokens WHERE jti = ?", (jti,))
-        token = cursor.fetchone()
+        token = execute_query("SELECT * FROM RevokedTokens WHERE jti = ?", (jti,), fetchone=True)
         return token
+    
     except Exception as e:
-        print(f"Error fetching revoked token: {e}")
+        print(jsonify({'error': str(e)})), 500
         return None
-    finally:
-        cursor.close()
-        conn.close()
