@@ -42,10 +42,16 @@ cp .env.example .env
 gunicorn --logger-class=config.logger.GunicornLogger service.wsgi:app --bind 0.0.0.0:8000 --workers=1
 ```
 
+### Or run with bash script
+    
+```bash
+bash run.sh
+```
+
 [<img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;">](https://app.getpostman.com/run-collection/21700421-95f6512d-c7d1-4b8c-9120-6feee078eb4d?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D21700421-95f6512d-c7d1-4b8c-9120-6feee078eb4d%26entityType%3Dcollection%26workspaceId%3D457ca1df-a10f-43da-a319-d4f63f5bd818)
 
 
-`I will leave/push database as it is, so you can test it.`
+`I will leave/push database as it is, so you can test it with some data.`
 
 **Important:** `Do not modify or modify and push the changes to another branch, if you are not sure what you did.`
 
