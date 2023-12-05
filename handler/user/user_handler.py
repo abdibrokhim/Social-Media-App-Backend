@@ -105,7 +105,6 @@ def get_user_by_username(username):
         return jsonify({'error': str(e)}), 500
 
 
-# TODO: Check whether user exists before updating
 @user_bp.route('/api/users/<int:user_id>', methods=['PATCH'])
 @jwt_required()
 def update_user(user_id):
