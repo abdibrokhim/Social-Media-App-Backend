@@ -19,7 +19,7 @@ python3 -m venv .venv
 ```bash
 # Linux
 source .venv/bin/activate
-#Gunicorn does not support windows consider using WSL 
+# Gunicorn does not support windows consider using WSL 
 # Windows
 #.venv\Scripts\activate.bat
 ```
