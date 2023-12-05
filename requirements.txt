@@ -21,3 +21,4 @@ Werkzeug==3.0.1
 flask-bcrypt
 flask-jwt-extended
 Flask-Cors==4.0.0
+openai

@@ -1,11 +1,7 @@
 from flask import Blueprint, jsonify, request
-from database.connections import get_cursor, get_connection
-import sqlite3
 from datetime import datetime
 from flask_jwt_extended import (
-    current_user,
     jwt_required,
-    get_jwt,
     get_jwt_identity
 )
 from handler.query_helpers import execute_query

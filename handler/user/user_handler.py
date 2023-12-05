@@ -1,15 +1,9 @@
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import (
-    create_access_token,
-    create_refresh_token,
     jwt_required,
-    get_jwt,
-    current_user,
     get_jwt_identity,
 )
 from flask import Blueprint, jsonify, request
-import sqlite3
-from database.connections import get_cursor, get_connection
 from datetime import datetime
 from handler.query_helpers import execute_query
 

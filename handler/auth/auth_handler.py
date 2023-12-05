@@ -3,13 +3,11 @@ from flask_bcrypt import Bcrypt
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
-    current_user,
     jwt_required,
     get_jwt,
     get_jwt_identity
 )
 import sqlite3
-from database.connections import get_connection
 from datetime import datetime
 from handler.query_helpers import execute_query
 
