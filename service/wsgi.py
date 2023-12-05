@@ -26,6 +26,8 @@ from handler.post import post_handler
 from handler.category import category_handler
 from handler.auth import auth_handler
 from handler.detection import vision_handler
+from handler.filters import user_filter
+from handler.filters import post_filter
 from handler.auth.auth_handler import get_revoked_token
 from handler.user.user_handler import get_user_by_username
 
@@ -128,5 +130,7 @@ app.register_blueprint(user_handler.user_bp)
 app.register_blueprint(post_handler.post_bp)
 app.register_blueprint(category_handler.category_bp)
 app.register_blueprint(vision_handler.vision_bp)
+app.register_blueprint(user_filter.user_filter_bp)
+app.register_blueprint(post_filter.post_filter_bp)
 app.register_error_handler(400, handle_bad_request)
 

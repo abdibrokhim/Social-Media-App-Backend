@@ -27,17 +27,15 @@ def create_user_table():
         return False
 
 
-
 def create_user_meta_info_table():
     try:
         get_cursor().execute('''
                                 CREATE TABLE IF NOT EXISTS UserMetaInfo (
-                                    id INTEGER PRIMARY KEY,
-                                    followers INTEGER,
-                                    following INTEGER,
-                                    likes INTEGER,
                                     userId INTEGER,
-                                    FOREIGN KEY (userId) REFERENCES Users(id)
+                                    metaInfoId INTEGER,
+                                    PRIMARY KEY (userId, metaInfoId),
+                                    FOREIGN KEY (userId) REFERENCES Users(id),
+                                    FOREIGN KEY (metaInfoId) REFERENCES MetaInfo(id)
                                 );
                             ''')
         get_cursor().close()
@@ -47,6 +45,41 @@ def create_user_meta_info_table():
         return False
     
 
+def create_user_social_media_links_table():
+    try:
+        get_cursor().execute('''
+                                CREATE TABLE IF NOT EXISTS UserSocialMediaLinks (
+                                    userId INTEGER,
+                                    socialMediaLinkId INTEGER,
+                                    PRIMARY KEY (userId, socialMediaLinkId),
+                                    FOREIGN KEY (userId) REFERENCES Users(id),
+                                    FOREIGN KEY (socialMediaLinkId) REFERENCES SocialMediaLinks(id)
+                                );
+                            ''')
+        get_cursor().close()
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+
+def create_meta_info_table():
+    try:
+        get_cursor().execute('''
+                                CREATE TABLE IF NOT EXISTS MetaInfo (
+                                    id INTEGER PRIMARY KEY,
+                                    followers INTEGER,
+                                    following INTEGER,
+                                    likes INTEGER
+                                );
+                            ''')
+        get_cursor().close()
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+
 def create_social_media_links_table():
     try:
         get_cursor().execute('''
@@ -54,9 +87,7 @@ def create_social_media_links_table():
                                     id INTEGER PRIMARY KEY,
                                     icon TEXT,
                                     name TEXT NOT NULL,
-                                    url TEXT NOT NULL,
-                                    userId INTEGER,
-                                    FOREIGN KEY (userId) REFERENCES Users(id)
+                                    url TEXT NOT NULL
                                 );
                             ''')
         get_cursor().close()
@@ -86,7 +117,7 @@ def create_user_interests_table():
 def create_revoked_tokens_table():
     try:
         get_cursor().execute('''
-                                CREATE TABLE RevokedTokens (
+                                CREATE TABLE IF NOT EXISTS RevokedTokens (
                                     jti TEXT PRIMARY KEY,
                                     revoked_at DATETIME NOT NULL
                                 );
@@ -106,6 +137,24 @@ def create_user_follow_table():
                                     PRIMARY KEY (followerId, followingId),
                                     FOREIGN KEY (followerId) REFERENCES Users(id),
                                     FOREIGN KEY (followingId) REFERENCES Users(id)
+                                );
+                            ''')
+        get_cursor().close()
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+
+def create_user_posts_table():
+    try:
+        get_cursor().execute('''
+                                CREATE TABLE IF NOT EXISTS UserPosts (
+                                    userId INTEGER,
+                                    postId INTEGER,
+                                    PRIMARY KEY (userId, postId),
+                                    FOREIGN KEY (userId) REFERENCES Users(id),
+                                    FOREIGN KEY (postId) REFERENCES Posts(id)
                                 );
                             ''')
         get_cursor().close()

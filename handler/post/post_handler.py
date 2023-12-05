@@ -8,8 +8,9 @@ from handler.query_helpers import execute_query
 
 post_bp = Blueprint('post', __name__)
 
+
 @post_bp.route('/api/posts', methods=['GET'])
-def get_posts():
+def get_all_alive_posts():
 
     try:
         cursor = execute_query("SELECT * FROM Posts WHERE isDeleted = 0")
@@ -18,10 +19,22 @@ def get_posts():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+
+@post_bp.route('/api/posts', methods=['GET'])
+def get_all_posts():
+
+    try:
+        cursor = execute_query("SELECT * FROM Posts")
+        posts = [dict(row) for row in cursor.fetchall()]
+        return jsonify(posts)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @post_bp.route('/api/posts/<int:post_id>', methods=['GET'])
 def get_post_by_id(post_id):
-
 
     try:
 
@@ -41,30 +54,41 @@ def get_post_by_id(post_id):
 @post_bp.route('/api/posts', methods=['POST'])
 @jwt_required()
 def create_post():
-
     new_post = request.json
     username = get_jwt_identity()
+    print(f"LOG: user {username} is creating a post")
 
     try:
         user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
 
-        post_id = execute_query("""
-            INSERT INTO Posts (createdAt, description, image, activityLevel, isDeleted, title, userId) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (datetime.now(), new_post['description'], new_post['image'], 1, 0, new_post['title'], user_id), commit=True).lastrowid
+        result = execute_query("""
+            INSERT INTO Posts (createdAt, description, image, activityLevel, isDeleted, title) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (datetime.now(), new_post['description'], new_post['image'], 1, 0, new_post['title']), commit=True)
 
-        # Add post categories
-        for category in new_post['categories']:
-            category_id = category['categoryId']
+        if result is not None:
+            post_id = result.lastrowid
+
+            # Add post categories
+            for category in new_post['categories']:
+                category_id = category['categoryId']
+                execute_query("""
+                    INSERT INTO PostCategories (postId, categoryId)
+                    VALUES (?, ?)
+                """, (post_id, category_id), commit=True)
+
+            # Link post to user
             execute_query("""
-                INSERT INTO PostCategories (postId, categoryId)
+                INSERT INTO UserPosts (postId, userId)
                 VALUES (?, ?)
-            """, (post_id, category_id), commit=True)
+            """, (post_id, user_id), commit=True)
 
-        return jsonify({'message': 'Post created successfully'}), 201
-    
+            return jsonify({'message': 'Post created successfully'}), 201
+        return jsonify({'error': 'Failed to insert post'}), 500
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @post_bp.route('/api/posts/<post_id>', methods=['PATCH'])
 @jwt_required()
@@ -102,7 +126,7 @@ def update_post(post_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
+# API endpoint to like a post
 @post_bp.route('/api/posts/<int:post_id>/like', methods=['POST'])
 @jwt_required()
 def like_post(post_id):
@@ -111,7 +135,11 @@ def like_post(post_id):
 
     try:
         user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
-
+        
+        # Check if user is already liked the post
+        if execute_query("SELECT * FROM PostLikes WHERE postId = ? AND userId = ?", (post_id, user_id), fetchone=True):
+            return jsonify({'message': 'Post already liked'})
+        
         execute_query("INSERT INTO PostLikes (postId, userId) VALUES (?, ?)", (post_id, user_id), commit=True)
 
         return jsonify({'message': 'Post liked successfully'})
@@ -119,6 +147,7 @@ def like_post(post_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# API endpoint to unlike a post
 @post_bp.route('/api/posts/<int:post_id>/dislike', methods=['POST'])
 @jwt_required()
 def dislike_post(post_id):
@@ -134,8 +163,32 @@ def dislike_post(post_id):
     
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+        
+
+# API endpoint to like or dislike a post (toggle)
+@post_bp.route('/api/posts/<int:post_id>/toggle-like', methods=['POST'])
+@jwt_required()
+def toggle_like_post(post_id):
+        
+    username = get_jwt_identity()
+
+    try:
+        user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+        # Check if user is already liked the post
+        if execute_query("SELECT * FROM PostLikes WHERE postId = ? AND userId = ?", (post_id, user_id), fetchone=True):
+            execute_query("DELETE FROM PostLikes WHERE postId = ? AND userId = ?", (post_id, user_id), commit=True)
+            return jsonify({'message': 'Post unliked successfully'})
+
+        execute_query("INSERT INTO PostLikes (postId, userId) VALUES (?, ?)", (post_id, user_id), commit=True)
+
+        return jsonify({'message': 'Post liked successfully'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
+# API endpoint to get the number of likes for a post
 @post_bp.route('/api/posts/<int:post_id>/likes', methods=['GET'])
 def get_post_likes(post_id):
     
@@ -146,8 +199,9 @@ def get_post_likes(post_id):
 
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+        
 
-
+# API endpoint to get the list of users who liked the post
 @post_bp.route('/api/posts/<int:post_id>/liked-users', methods=['GET'])
 def get_post_liked_users(post_id):
     try:
@@ -165,6 +219,7 @@ def get_post_liked_users(post_id):
         return jsonify({'error': str(e)}), 500
 
 
+#  API endpoint to delete a post
 @post_bp.route('/api/posts/<post_id>', methods=['DELETE'])
 @jwt_required()
 def delete_post(post_id):
@@ -177,6 +232,7 @@ def delete_post(post_id):
         return jsonify({'error': str(e)}), 500
 
 
+# API endpoint to get the list of deleted posts
 @post_bp.route('/api/posts/deleted', methods=['GET'])
 def get_deleted_posts():
 

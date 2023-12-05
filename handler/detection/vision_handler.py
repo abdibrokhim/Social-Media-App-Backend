@@ -6,14 +6,14 @@ from flask_jwt_extended import (
 from flask import Blueprint, jsonify, request
 from datetime import datetime
 from handler.query_helpers import execute_query
-import open_ai
+from handler.detection import open_ai
 
 vision_bp = Blueprint('vision', __name__)
 bcrypt = Bcrypt()
 
 @vision_bp.route('/api/detection', methods=['POST'])
 @jwt_required()
-def generate_title_and_description():
+def get_title_and_description():
     image_r = request.json
 
     try:

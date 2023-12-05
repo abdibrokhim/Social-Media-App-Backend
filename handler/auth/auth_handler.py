@@ -34,10 +34,15 @@ def register():
             VALUES (?, ?, ?, 1, 0, 0, ?)
         """, (data['username'], data['email'], hashed_password, datetime.now()), commit=True).lastrowid
 
+        meta_info_id = execute_query("""
+            INSERT INTO MetaInfo (followers, following, likes)
+            VALUES (0, 0, 0)
+        """, commit=True).lastrowid
+
         execute_query("""
-            INSERT INTO UserMetaInfo (followers, following, likes, userId)
-            VALUES (0, 0, 0, ?)
-        """, (user_id,), commit=True)
+            INSERT INTO UserMetaInfo (userId, metaInfoId)
+            VALUES (?, ?)
+        """, (user_id, meta_info_id), commit=True)
 
         return jsonify({'message': 'User registered successfully'}), 201
 

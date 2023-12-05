@@ -13,9 +13,7 @@ def create_posts_table():
                                     activityLevel REAL NOT NULL,
                                     isDeleted BOOLEAN NOT NULL,
                                     title TEXT NOT NULL,
-                                    updatedAt DATETIME,
-                                    userId INTEGER,
-                                    FOREIGN KEY (userId) REFERENCES Users(id)
+                                    updatedAt DATETIME
                                 );
                             ''')
         get_cursor().close()
