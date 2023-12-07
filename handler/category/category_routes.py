@@ -2,6 +2,10 @@ from flask import Blueprint, jsonify, request
 from datetime import datetime
 from handler.query_helpers import execute_query
 
+from flask_jwt_extended import (
+    jwt_required,
+)
+
 from handler.category.category_service import (
     get_categories_service,
     get_category_by_id_service,
@@ -15,6 +19,7 @@ category_bp = Blueprint('category', __name__)
 
 
 @category_bp.route('/api/categories', methods=['GET'])
+@jwt_required()
 def get_categories():
     try:
         categories = get_categories_service()
@@ -26,6 +31,7 @@ def get_categories():
 
 
 @category_bp.route('/api/categories/<int:category_id>', methods=['GET'])
+@jwt_required()
 def get_category_by_id(category_id):
     try:
         category = get_category_by_id_service(category_id=category_id)
@@ -37,6 +43,7 @@ def get_category_by_id(category_id):
 
 
 @category_bp.route('/api/categories', methods=['POST'])
+@jwt_required()
 def create_category():
     new_category = request.json
     try:
@@ -47,6 +54,7 @@ def create_category():
 
 
 @category_bp.route('/api/categories/<int:category_id>', methods=['PATCH'])
+@jwt_required()
 def update_category(category_id):
     updated_category = request.json
     try:
@@ -57,6 +65,7 @@ def update_category(category_id):
 
 
 @category_bp.route('/api/categories/<int:category_id>', methods=['DELETE'])
+@jwt_required()
 def delete_category(category_id):
     try:
         message, status_code = delete_category_service(category_id=category_id)
@@ -66,6 +75,7 @@ def delete_category(category_id):
 
 
 @category_bp.route('/api/categories/deleted', methods=['GET'])
+@jwt_required()
 def get_deleted_categories():
     try:
         categories = get_deleted_categories_service()

@@ -29,6 +29,7 @@ bcrypt = Bcrypt()
 
 
 @user_bp.route('/api/users/<int:user_id>', methods=['GET'])
+@jwt_required()
 def get_user_by_id(user_id):
     try:
         user_data = get_user_by_id_service(user_id=user_id)
@@ -40,6 +41,7 @@ def get_user_by_id(user_id):
 
 
 @user_bp.route('/api/users/<username>', methods=['GET'])
+@jwt_required()
 def get_user_by_username(username):
     try:
         user_data = get_user_by_username_service(username=username)
@@ -72,6 +74,7 @@ def delete_user(user_id):
 
 # API endpoint to get all deleted users
 @user_bp.route('/api/users/deleted', methods=['GET'])
+@jwt_required()
 def get_all_deleted_users():
     try:
         users = get_all_deleted_users_service()
@@ -81,6 +84,7 @@ def get_all_deleted_users():
 
 # API endpoint to get all users (including deleted users)
 @user_bp.route('/api/users/all', methods=['GET'])
+@jwt_required()
 def get_all_users():
 
     try:
@@ -92,6 +96,7 @@ def get_all_users():
 
 # API endpoint to get all alive users (isDeleted = false)
 @user_bp.route('/api/users/alive', methods=['GET'])
+@jwt_required()
 def get_all_alive_users():
 
     try:
@@ -104,6 +109,7 @@ def get_all_alive_users():
 
 # API endpoint to get user's all non deleted posts
 @user_bp.route('/api/users/<int:user_id>/posts', methods=['GET'])
+@jwt_required()
 def get_user_posts(user_id):
 
     try:
@@ -116,6 +122,7 @@ def get_user_posts(user_id):
 
 # API endpoint to get user's meta info
 @user_bp.route('/api/users/<int:user_id>/user-meta-info', methods=['GET'])
+@jwt_required()
 def get_user_meta_info(user_id):
 
     try:
@@ -130,6 +137,7 @@ def get_user_meta_info(user_id):
 
 # API endpoint to get user's social media links
 @user_bp.route('/api/users/<int:user_id>/social-media-links', methods=['GET'])
+@jwt_required()
 def get_user_social_media_links(user_id):
 
     try:
@@ -144,6 +152,7 @@ def get_user_social_media_links(user_id):
 
 # API endpoint to get user's interests
 @user_bp.route('/api/users/<int:user_id>/interests', methods=['GET'])
+@jwt_required()
 def get_user_interests(user_id):
 
     try:

@@ -25,6 +25,7 @@ from handler.post.post_service import (
 post_bp = Blueprint('post', __name__)
 
 @post_bp.route('/api/posts', methods=['GET'])
+@jwt_required()
 def get_all_alive_posts():
     try:
         posts = get_all_alive_posts_service()
@@ -33,6 +34,7 @@ def get_all_alive_posts():
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts', methods=['GET'])
+@jwt_required()
 def get_all_posts():
 
     try:
@@ -43,6 +45,7 @@ def get_all_posts():
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/<int:post_id>', methods=['GET'])
+@jwt_required()
 def get_post_by_id(post_id):
 
     try:
@@ -93,6 +96,7 @@ def update_post(post_id):
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/<int:post_id>/likes', methods=['GET'])
+@jwt_required()
 def get_post_likes(post_id):
     try:
         likes = get_post_likes_service(post_id)
@@ -101,6 +105,7 @@ def get_post_likes(post_id):
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/<int:post_id>/liked-users', methods=['GET'])
+@jwt_required()
 def get_post_liked_users(post_id):
     try:
         users = get_post_liked_users_service(post_id)
@@ -118,6 +123,7 @@ def delete_post(post_id):
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/deleted', methods=['GET'])
+@jwt_required()
 def get_deleted_posts():
     try:
         posts = get_deleted_posts_service()
@@ -126,6 +132,7 @@ def get_deleted_posts():
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/category/<int:category_id>', methods=['GET'])
+@jwt_required()
 def get_posts_by_category(category_id):
     try:
         posts = get_posts_by_category_service(category_id)
@@ -134,6 +141,7 @@ def get_posts_by_category(category_id):
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/explore', methods=['GET'])
+@jwt_required()
 def get_explore_posts():
     # Accessing query parameters
     trending_posts_limit = request.args.get('trending', type=int)
@@ -147,6 +155,7 @@ def get_explore_posts():
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/explore/trending', methods=['GET'])
+@jwt_required()
 def get_explore_trending_posts():
     # Accessing query parameters
     limit = request.args.get('limit', type=int)
@@ -159,6 +168,7 @@ def get_explore_trending_posts():
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/explore/new', methods=['GET'])
+@jwt_required()
 def get_explore_new_posts():
     # Accessing query parameters
     limit = request.args.get('limit', type=int)
@@ -171,6 +181,7 @@ def get_explore_new_posts():
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/explore/diverse', methods=['GET'])
+@jwt_required()
 def get_explore_diverse_posts():
     # Accessing query parameters
     limit = request.args.get('limit', type=int)
@@ -184,6 +195,7 @@ def get_explore_diverse_posts():
 
 
 @post_bp.route('/api/posts/made-for-you', methods=['GET'])
+@jwt_required()
 @jwt_required()
 def get_made_for_you_posts():
     limit = request.args.get('limit', type=int)
