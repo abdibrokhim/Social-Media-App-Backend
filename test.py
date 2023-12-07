@@ -159,7 +159,7 @@ def create_post():
         })
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzAxODA1MTE4LCJqdGkiOiJjZDliNDBiOS02NjdiLTRhMzMtYmMyYS0wODY4OTM3NDMwNjQiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiaWJyb2hpbSIsIm5iZiI6MTcwMTgwNTExOH0.RChfUdxHicidiaIEyPcNfaepXI3_rnRIAeooeO4i-BI'
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzAxODA1MTE4LCJqdGkiOiJjZDliNDBiOS02NjdiLTRhMzMtYmMyYS0wODY4OTM3NDMwNjQiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiaWJyb2hpbSIsIm5iZiI6MTcwMTgwNTExOH0.RChfUdxHicidiaIEyPcNfaepXI3_rnRIAeooeO4i-BI'  # TEST token
         }
 
         response = requests.request("POST", url, headers=headers, data=payload)
@@ -178,7 +178,7 @@ def follow_user():
         payload = {}
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzAxODA1MTE4LCJqdGkiOiJjZDliNDBiOS02NjdiLTRhMzMtYmMyYS0wODY4OTM3NDMwNjQiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiaWJyb2hpbSIsIm5iZiI6MTcwMTgwNTExOH0.RChfUdxHicidiaIEyPcNfaepXI3_rnRIAeooeO4i-BI'
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzAxODA1MTE4LCJqdGkiOiJjZDliNDBiOS02NjdiLTRhMzMtYmMyYS0wODY4OTM3NDMwNjQiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiaWJyb2hpbSIsIm5iZiI6MTcwMTgwNTExOH0.RChfUdxHicidiaIEyPcNfaepXI3_rnRIAeooeO4i-BI'  # TEST token
         }
 
         response = requests.request("POST", url, headers=headers, data=payload)
@@ -193,7 +193,7 @@ def unfollow_user():
     payload = {}
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzAxODA1MTE4LCJqdGkiOiJjZDliNDBiOS02NjdiLTRhMzMtYmMyYS0wODY4OTM3NDMwNjQiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiaWJyb2hpbSIsIm5iZiI6MTcwMTgwNTExOH0.RChfUdxHicidiaIEyPcNfaepXI3_rnRIAeooeO4i-BI'
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzAxODA1MTE4LCJqdGkiOiJjZDliNDBiOS02NjdiLTRhMzMtYmMyYS0wODY4OTM3NDMwNjQiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiaWJyb2hpbSIsIm5iZiI6MTcwMTgwNTExOH0.RChfUdxHicidiaIEyPcNfaepXI3_rnRIAeooeO4i-BI'  # TEST token
     }
 
     response = requests.request("DELETE", url, headers=headers, data=payload)
@@ -202,6 +202,7 @@ def unfollow_user():
 
 
 def like_post():
+    pass
 
 
 def main():

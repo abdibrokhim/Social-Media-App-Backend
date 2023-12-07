@@ -21,15 +21,15 @@ from service.constants import (
     API_ERROR_UNHANDELED,
 )
 from helper.api_types import create_error_return
-from handler.user import user_handler
-from handler.post import post_handler
-from handler.category import category_handler
-from handler.auth import auth_handler
+from handler.user import user_routes
+from handler.post import post_routes
+from handler.category import category_routes
+from handler.auth import auth_routes
 from handler.detection import vision_handler
-from handler.filters import user_filter
-from handler.filters import post_filter
-from handler.auth.auth_handler import get_revoked_token
-from handler.user.user_handler import get_user_by_username
+from handler.filters.user import user_filter_routes
+from handler.filters.post import post_filter_routes
+from handler.auth.auth_routes import get_revoked_token
+from handler.user.user_routes import get_user_by_username
 
 
 def setup_logging():
@@ -125,12 +125,12 @@ def metrics():
     return Response(data, mimetype=CONTENT_TYPE_LATEST)
 
 
-app.register_blueprint(auth_handler.auth_bp)
-app.register_blueprint(user_handler.user_bp)
-app.register_blueprint(post_handler.post_bp)
-app.register_blueprint(category_handler.category_bp)
+app.register_blueprint(auth_routes.auth_bp)
+app.register_blueprint(user_routes.user_bp)
+app.register_blueprint(post_routes.post_bp)
+app.register_blueprint(category_routes.category_bp)
 app.register_blueprint(vision_handler.vision_bp)
-app.register_blueprint(user_filter.user_filter_bp)
-app.register_blueprint(post_filter.post_filter_bp)
+app.register_blueprint(user_filter_routes.filter_users_bp)
+app.register_blueprint(post_filter_routes.filter_posts_bp)
 app.register_error_handler(400, handle_bad_request)
 
