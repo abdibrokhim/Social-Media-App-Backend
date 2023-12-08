@@ -1,6 +1,7 @@
 from datetime import datetime
 from handler.query_helpers import execute_query
 
+
 def get_all_alive_posts_service():
     cursor = execute_query("SELECT * FROM Posts WHERE isDeleted = 0")
     return [dict(row) for row in cursor.fetchall()]
@@ -13,16 +14,30 @@ def get_all_posts_service():
 
 def get_post_by_id_service(post_id):
 
-    post = execute_query("SELECT * FROM Posts WHERE id = ? AND isDeleted = 0", (post_id,), fetchone=True)
+    post = execute_query(
+        "SELECT * FROM Posts WHERE id = ? AND isDeleted = 0", (post_id,), fetchone=True)
+
     if post:
+        post_data = dict(post)
         # Increment the activity level count
-        execute_query("UPDATE Posts SET activityLevel = activityLevel + 1 WHERE id = ?", (post_id,), commit=True)
-        return dict(post)
+        execute_query(
+            "UPDATE Posts SET activityLevel = activityLevel + 1 WHERE id = ?", (post_id,), commit=True)
+        # Fetch post categories
+        categories_cursor = execute_query("""
+            SELECT c.* FROM PostCategories pc
+            JOIN Categories c ON pc.categoryId = c.id
+            WHERE pc.postId = ? AND c.isDeleted = 0
+        """, (post_id,))
+        post_data['categories'] = [dict(row)
+                                   for row in categories_cursor.fetchall()]
+
+        return post_data
     return None
 
 
 def create_post_service(new_post, username):
-    user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+    user_id = execute_query(
+        "SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
 
     result = execute_query("""
         INSERT INTO Posts (createdAt, description, image, activityLevel, isDeleted, title) 
@@ -46,8 +61,12 @@ def create_post_service(new_post, username):
             VALUES (?, ?)
         """, (post_id, user_id), commit=True)
 
-        return 'Post created successfully', 201
-    return 'Failed to insert post', 500
+        print('Post created successfully', 201)
+
+        # return created post
+        return get_post_by_id_service(post_id)
+    print('Failed to insert post', 500)
+    return None
 
 
 def update_post_service(post_id, updated_post):
@@ -71,32 +90,40 @@ def update_post_service(post_id, updated_post):
     update_fields.append("updatedAt = ?")
     update_values.append(datetime.now())
 
-    update_values.append(post_id)  # Add post_id at the end for the WHERE clause
+    # Add post_id at the end for the WHERE clause
+    update_values.append(post_id)
 
-    update_query = "UPDATE Posts SET " + ", ".join(update_fields) + " WHERE id = ?"
+    update_query = "UPDATE Posts SET " + \
+        ", ".join(update_fields) + " WHERE id = ?"
 
     execute_query(update_query, tuple(update_values), commit=True)
 
-    return 'Post updated successfully', 200
+    print('Post updated successfully', 200)
+    return get_post_by_id_service(post_id)
 
 
 def toggle_like_post_service(username, post_id):
-        
-    user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    user_id = execute_query(
+        "SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
 
     # Check if user is already liked the post
     if execute_query("SELECT * FROM PostLikes WHERE postId = ? AND userId = ?", (post_id, user_id), fetchone=True):
-        execute_query("DELETE FROM PostLikes WHERE postId = ? AND userId = ?", (post_id, user_id), commit=True)
+        execute_query("DELETE FROM PostLikes WHERE postId = ? AND userId = ?",
+                      (post_id, user_id), commit=True)
         return 'Post unliked successfully', 200
 
-    execute_query("INSERT INTO PostLikes (postId, userId) VALUES (?, ?)", (post_id, user_id), commit=True)
+    execute_query("INSERT INTO PostLikes (postId, userId) VALUES (?, ?)",
+                  (post_id, user_id), commit=True)
 
     return 'Post liked successfully', 200
 
 
 def get_post_likes_service(post_id):
-    cursor = execute_query("SELECT COUNT(*) AS likes FROM PostLikes WHERE postId = ?", (post_id,))
+    cursor = execute_query(
+        "SELECT COUNT(*) AS likes FROM PostLikes WHERE postId = ?", (post_id,))
     return cursor.fetchone()['likes']
+
 
 def get_post_liked_users_service(post_id):
     users_cursor = execute_query("""
@@ -106,13 +133,31 @@ def get_post_liked_users_service(post_id):
     """, (post_id,))
     return [dict(row) for row in users_cursor.fetchall()]
 
+
+def get_post_owner_service(post_id):
+
+    owner_cursor = execute_query("""
+        SELECT u.id AS userId, u.username, u.profileImage FROM UserPosts up
+        JOIN Users u ON up.userId = u.id
+        WHERE up.postId = ?
+    """, (post_id,), fetchone=True)
+
+    if owner_cursor:
+        return dict(owner_cursor)
+    return None
+
+
 def delete_post_service(post_id):
-    execute_query("UPDATE Posts SET isDeleted = 1 WHERE id = ?", (post_id,), commit=True)
-    return 'Post deleted successfully', 200
+    execute_query("UPDATE Posts SET isDeleted = 1 WHERE id = ?",
+                  (post_id,), commit=True)
+    print('Post deleted successfully', 200)
+    # return post_id
+    return post_id, 200
 
 def get_deleted_posts_service():
     cursor = execute_query("SELECT * FROM Posts WHERE isDeleted = 1")
     return [dict(row) for row in cursor.fetchall()]
+
 
 def get_posts_by_category_service(category_id):
     cursor = execute_query("""
@@ -138,6 +183,7 @@ def get_explore_posts_service(trending_limit, new_limit, diverse_limit):
     # Combine all posts into a single list
     return trending_posts + new_posts + diverse_posts
 
+
 def fetch_trending_posts(limit, excluded_ids):
     query = """
         SELECT p.*, COUNT(pl.userId) AS likes FROM Posts p
@@ -150,8 +196,20 @@ def fetch_trending_posts(limit, excluded_ids):
 
     cursor = execute_query(query, tuple(excluded_ids) + (limit,))
     trending_posts = [dict(row) for row in cursor.fetchall()]
+
     excluded_ids.update(post['id'] for post in trending_posts)
+
+    # Fetch post categories
+    for post in trending_posts:
+        categories_cursor = execute_query("""
+            SELECT c.* FROM PostCategories pc
+            JOIN Categories c ON pc.categoryId = c.id
+            WHERE pc.postId = ? AND c.isDeleted = 0
+        """, (post['id'],))
+        post['categories'] = [dict(row) for row in categories_cursor.fetchall()]
+
     return trending_posts
+
 
 def fetch_new_posts(limit, excluded_ids):
     query = """
@@ -164,6 +222,15 @@ def fetch_new_posts(limit, excluded_ids):
     cursor = execute_query(query, tuple(excluded_ids) + (limit,))
     new_posts = [dict(row) for row in cursor.fetchall()]
     excluded_ids.update(post['id'] for post in new_posts)
+    
+    # Fetch post categories
+    for post in new_posts:
+        categories_cursor = execute_query("""
+            SELECT c.* FROM PostCategories pc
+            JOIN Categories c ON pc.categoryId = c.id
+            WHERE pc.postId = ? AND c.isDeleted = 0
+        """, (post['id'],))
+        post['categories'] = [dict(row) for row in categories_cursor.fetchall()]
     return new_posts
 
 
@@ -181,15 +248,27 @@ def fetch_diverse_posts(limit, excluded_ids):
     cursor = execute_query(query, tuple(excluded_ids) + (limit,))
     diverse_posts = [dict(row) for row in cursor.fetchall()]
     excluded_ids.update(post['id'] for post in diverse_posts)
+    
+    # Fetch post categories
+    for post in diverse_posts:
+        categories_cursor = execute_query("""
+            SELECT c.* FROM PostCategories pc
+            JOIN Categories c ON pc.categoryId = c.id
+            WHERE pc.postId = ? AND c.isDeleted = 0
+        """, (post['id'],))
+        post['categories'] = [dict(row) for row in categories_cursor.fetchall()]
+
     return diverse_posts
 
 
 def get_made_for_you_posts_service(username, limit, offset):
     # Fetch user ID
-    user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+    user_id = execute_query(
+        "SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
 
     # Fetch user interests
-    interests_cursor = execute_query("SELECT categoryId FROM UserInterests WHERE userId = ?", (user_id,))
+    interests_cursor = execute_query(
+        "SELECT categoryId FROM UserInterests WHERE userId = ?", (user_id,))
     interests = interests_cursor.fetchall()
 
     # If user has no interests, return explore posts (or an empty list)

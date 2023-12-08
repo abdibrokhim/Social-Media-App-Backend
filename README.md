@@ -1,5 +1,8 @@
 # Social Media App Service
 
+## NOTE:
+If it gives following error: `{"app": "SOCIAL_MEDIA_SERVICE", "event": "Exception on /api/posts/all [GET]", "exc_info": ["<class' RecursionError'>", "RecursionError('maximum recursion depth exceeded')", "<traceback object at 0x103e5de00>"], "level": "error", "timestamp": "2023-12-08 20:38:57"}`. Don't worry, it's because of the decorator `@jwt_required`. I will fix it later. If you want to test any of the API endpoints, just comment out the decorator.
+
 ## Installation
 
 ### Clone the repository

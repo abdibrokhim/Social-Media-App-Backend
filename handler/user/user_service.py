@@ -36,6 +36,15 @@ def get_user_by_id_service(user_id):
     posts = [dict(post) for post in cursor.fetchall()]
     user_data['posts'] = posts
 
+    # Fetch post categories
+    for post in user_data['posts']:
+        categories_cursor = execute_query("""
+            SELECT c.* FROM PostCategories pc
+            JOIN Categories c ON pc.categoryId = c.id
+            WHERE pc.postId = ? AND c.isDeleted = 0
+        """, (post['id'],))
+        post['categories'] = [dict(row) for row in categories_cursor.fetchall()]
+
     # Fetch interests
     cursor = execute_query("""
         SELECT c.* FROM Categories c
@@ -101,7 +110,7 @@ def get_user_by_username_service(username):
 
     return user_data
 
-
+# todo: return updated user
 def update_user_service(user_id, updated_user):
     update_fields = []
     update_values = []
@@ -190,7 +199,7 @@ def get_user_interests_service(user_id):
     """, (user_id,))
     return [dict(interest) for interest in cursor.fetchall()]
 
-
+# todo: return user social media link (updated link)
 def update_specific_social_media_link_service(user_id, link_id, updated_link):
     update_fields = []
     update_values = []
@@ -234,7 +243,7 @@ def update_specific_social_media_link_service(user_id, link_id, updated_link):
 
     return 'Social media link updated successfully', 200
 
-
+# todo: return user social media links (list)
 def add_social_media_link_service(user_id, socials_data):
 
     for social in socials_data:
@@ -283,7 +292,7 @@ def delete_specific_social_media_link_service(link_id, user_id):
 
     return 'Social media link deleted successfully', 200
 
-
+# todo: return user interests
 def add_interest_service(user_id, interest_data):
     for interest in interest_data:
         category_id = interest.get('categoryId')
@@ -330,3 +339,44 @@ def toggle_follow_user_service(user_id, username):
     execute_query("UPDATE MetaInfo SET following = following + 1 WHERE id = (SELECT metaInfoId FROM UserMetaInfo WHERE userId = ?)", (follower_id,), commit=True)
 
     return 'User followed successfully', 200
+
+
+def is_following_service(user_id, username):
+    follower_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    # Check if user is already followed
+    is_followed = execute_query("SELECT * FROM UserFollowers WHERE followingId = ? AND followerId = ?", (user_id, follower_id), fetchone=True)
+
+    if is_followed:
+        return True
+    return False
+
+
+def follow_user_service(user_id, username):
+    follower_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    # Follow user, here user_id is the user being following's id and follower_id is the follower's id
+    execute_query("INSERT INTO UserFollowers (followingId, followerId) VALUES (?, ?)", (user_id, follower_id), commit=True)
+
+    # Increment the follower count for the user being followed
+    execute_query("UPDATE MetaInfo SET followers = followers + 1 WHERE id = (SELECT metaInfoId FROM UserMetaInfo WHERE userId = ?)", (user_id,), commit=True)
+
+    # Increment the following count for the follower user
+    execute_query("UPDATE MetaInfo SET following = following + 1 WHERE id = (SELECT metaInfoId FROM UserMetaInfo WHERE userId = ?)", (follower_id,), commit=True)
+
+    return 'User followed successfully', 200
+
+
+def unfollow_user_service(user_id, username):
+    follower_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    # Unfollow user, here followingId is the user being followed and followerId is the user following
+    execute_query("DELETE FROM UserFollowers WHERE followingId = ? AND followerId = ?", (user_id, follower_id), commit=True)
+
+    # Decrement the follower count for the user being followed
+    execute_query("UPDATE MetaInfo SET followers = followers - 1 WHERE id = (SELECT metaInfoId FROM UserMetaInfo WHERE userId = ?)", (user_id,), commit=True)
+
+    # Decrement the following count for the follower user
+    execute_query("UPDATE MetaInfo SET following = following - 1 WHERE id = (SELECT metaInfoId FROM UserMetaInfo WHERE userId = ?)", (follower_id,), commit=True)
+
+    return 'User unfollowed successfully', 200

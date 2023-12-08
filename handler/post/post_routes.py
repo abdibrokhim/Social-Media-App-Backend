@@ -19,12 +19,13 @@ from handler.post.post_service import (
     fetch_trending_posts,
     fetch_new_posts,
     fetch_diverse_posts,
-    get_made_for_you_posts_service
+    get_made_for_you_posts_service,
+    get_post_owner_service
 )
 
 post_bp = Blueprint('post', __name__)
 
-@post_bp.route('/api/posts', methods=['GET'])
+@post_bp.route('/api/posts/live', methods=['GET'])
 @jwt_required()
 def get_all_alive_posts():
     try:
@@ -33,7 +34,7 @@ def get_all_alive_posts():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@post_bp.route('/api/posts', methods=['GET'])
+@post_bp.route('/api/posts/all', methods=['GET'])
 @jwt_required()
 def get_all_posts():
 
@@ -45,7 +46,7 @@ def get_all_posts():
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/<int:post_id>', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_post_by_id(post_id):
 
     try:
@@ -65,8 +66,8 @@ def create_post():
     print(f"LOG: user {username} is creating a post")
 
     try:
-        message, status_code = create_post_service(new_post=new_post, username=username)
-        return jsonify({'message': message}), status_code
+        new_post = create_post_service(new_post=new_post, username=username)
+        return jsonify(new_post), 201
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -90,13 +91,13 @@ def toggle_like_post(post_id):
 def update_post(post_id):
     updated_post = request.json
     try:
-        message, status_code = update_post_service(post_id=post_id, updated_post=updated_post)
-        return jsonify({'message': message}), status_code
+        new_post = update_post_service(post_id=post_id, updated_post=updated_post)
+        return jsonify(new_post), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/<int:post_id>/likes', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_post_likes(post_id):
     try:
         likes = get_post_likes_service(post_id)
@@ -105,20 +106,31 @@ def get_post_likes(post_id):
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/<int:post_id>/liked-users', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_post_liked_users(post_id):
     try:
         users = get_post_liked_users_service(post_id)
-        return jsonify({"users": users})
+        return jsonify({'users': users})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@post_bp.route('/api/posts/<int:post_id>/owner', methods=['GET'])
+# @jwt_required()
+def get_post_owner(post_id):
+    try:
+        owner = get_post_owner_service(post_id)
+        return jsonify({'owner': owner})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @post_bp.route('/api/posts/<post_id>', methods=['DELETE'])
 @jwt_required()
 def delete_post(post_id):
     try:
-        message = delete_post_service(post_id)
-        return jsonify({'message': message})
+        post_id = delete_post_service(post_id)
+        return jsonify({'postId': post_id})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -141,7 +153,7 @@ def get_posts_by_category(category_id):
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/explore', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_explore_posts():
     # Accessing query parameters
     trending_posts_limit = request.args.get('trending', type=int)
@@ -195,7 +207,6 @@ def get_explore_diverse_posts():
 
 
 @post_bp.route('/api/posts/made-for-you', methods=['GET'])
-@jwt_required()
 @jwt_required()
 def get_made_for_you_posts():
     limit = request.args.get('limit', type=int)

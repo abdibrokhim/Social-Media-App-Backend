@@ -21,7 +21,10 @@ from handler.user.user_service import (
     delete_specific_social_media_link_service,
     add_interest_service,
     delete_interest_service,
-    toggle_follow_user_service
+    toggle_follow_user_service,
+    follow_user_service,
+    unfollow_user_service,
+    is_following_service
 )
 
 user_bp = Blueprint('user', __name__)
@@ -29,7 +32,7 @@ bcrypt = Bcrypt()
 
 
 @user_bp.route('/api/users/<int:user_id>', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_user_by_id(user_id):
     try:
         user_data = get_user_by_id_service(user_id=user_id)
@@ -53,7 +56,7 @@ def get_user_by_username(username):
 
 
 @user_bp.route('/api/users/<int:user_id>', methods=['PATCH'])
-@jwt_required()
+# @jwt_required()
 def update_user(user_id):
     try:
         updated_user = request.json
@@ -74,7 +77,6 @@ def delete_user(user_id):
 
 # API endpoint to get all deleted users
 @user_bp.route('/api/users/deleted', methods=['GET'])
-@jwt_required()
 def get_all_deleted_users():
     try:
         users = get_all_deleted_users_service()
@@ -84,7 +86,6 @@ def get_all_deleted_users():
 
 # API endpoint to get all users (including deleted users)
 @user_bp.route('/api/users/all', methods=['GET'])
-@jwt_required()
 def get_all_users():
 
     try:
@@ -95,8 +96,7 @@ def get_all_users():
         return jsonify({'error': str(e)}), 500
 
 # API endpoint to get all alive users (isDeleted = false)
-@user_bp.route('/api/users/alive', methods=['GET'])
-@jwt_required()
+@user_bp.route('/api/users/live', methods=['GET'])
 def get_all_alive_users():
 
     try:
@@ -236,6 +236,54 @@ def toggle_follow_user(user_id):
     try:
         message, status_code = toggle_follow_user_service(user_id=user_id, username=username)
         return jsonify({'message': message}), status_code
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@user_bp.route('/api/users/<int:user_id>/follow', methods=['POST'])
+@jwt_required()
+def follow_user(user_id):
+    # user_id => user being followed
+    # follower_id => user following
+
+    username = get_jwt_identity()
+
+    try:
+        message, status_code = follow_user_service(user_id=user_id, username=username)
+        return jsonify({'message': message}), status_code
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@user_bp.route('/api/users/<int:user_id>/unfollow', methods=['POST'])
+@jwt_required()
+def unfollow_user(user_id):
+    # user_id => user being followed
+    # follower_id => user following
+
+    username = get_jwt_identity()
+
+    try:
+        message, status_code = unfollow_user_service(user_id=user_id, username=username)
+        return jsonify({'message': message}), status_code
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@user_bp.route('/api/users/<int:user_id>/is-following', methods=['POST'])
+@jwt_required()
+def is_following(user_id):
+    # user_id => user being followed
+    # follower_id => user following
+
+    username = get_jwt_identity()
+
+    try:
+        is_following = is_following_service(user_id=user_id, username=username)
+        return jsonify({'is_following': is_following})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

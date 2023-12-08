@@ -205,6 +205,37 @@ def like_post():
     pass
 
 
+def get_all_users():
+    url = "http://0.0.0.0:8000/api/users/all"
+
+    payload = {}
+
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzAxOTY5MDQ4LCJqdGkiOiJjNzU4MzQ3Ni04OTg5LTRjNjctYjRjMi00Njk3YTA5NzcwNjMiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiaWJyb2hpbSIsIm5iZiI6MTcwMTk2OTA0OH0.x583dCYfJ-8YZpIBVww_TKXr-tIyWFw2JmmYHbETaFE' # TEST token
+    }
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+
+    print(response.text)
+
+
+def get_all_posts():
+
+    url = "http://0.0.0.0:8000/api/posts/all"
+
+    payload = {}
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzAxOTY5MDQ4LCJqdGkiOiJjNzU4MzQ3Ni04OTg5LTRjNjctYjRjMi00Njk3YTA5NzcwNjMiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiaWJyb2hpbSIsIm5iZiI6MTcwMTk2OTA0OH0.x583dCYfJ-8YZpIBVww_TKXr-tIyWFw2JmmYHbETaFE'
+    }
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+
+    print(response.text)
+
+
+
 def main():
     # create_tables()
     # create_user()
@@ -214,6 +245,9 @@ def main():
     # create_post()
     # follow_user()
     # unfollow_user()
+    # like_post()
+    get_all_users()
+    # get_all_posts()
 
     pass
 
