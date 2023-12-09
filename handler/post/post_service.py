@@ -122,6 +122,30 @@ def toggle_like_post_service(username, post_id):
     return 'Post liked successfully', 200
 
 
+def like_post_service(username, post_id):
+    user_id = execute_query(
+        "SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    execute_query("INSERT INTO PostLikes (postId, userId) VALUES (?, ?)",
+                  (post_id, user_id), commit=True)
+
+    print('Post liked successfully', 200)
+    # return likes count
+    return get_post_likes_service(post_id)
+
+
+def unlike_post_service(username, post_id):
+    user_id = execute_query(
+        "SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    execute_query("DELETE FROM PostLikes WHERE postId = ? AND userId = ?",
+                  (post_id, user_id), commit=True)
+
+    print('Post unliked successfully', 200)
+    # return likes count
+    return get_post_likes_service(post_id)
+
+
 def get_post_likes_service(post_id):
     cursor = execute_query(
         "SELECT COUNT(*) AS likes FROM PostLikes WHERE postId = ?", (post_id,))

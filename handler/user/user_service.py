@@ -1,3 +1,4 @@
+from httpx import get
 from handler.query_helpers import execute_query
 from datetime import datetime
 
@@ -138,7 +139,18 @@ def update_user_service(user_id, updated_user):
 
     execute_query(update_query, tuple(update_values), commit=True)
 
-    return 'User updated successfully', 200
+    print('User updated successfully', 200)
+    return get_updated_user_info(user_id)
+
+
+def get_updated_user_info(user_id):
+    # Fetch user firstName, lastName, profileImage, updatedAt
+    user = execute_query("SELECT firstName, lastName, profileImage, updatedAt FROM Users WHERE id = ?", (user_id,), fetchone=True)
+
+    if user is None:
+        return None
+    
+    return dict(user)
 
 
 def delete_user_service(user_id):
@@ -239,9 +251,12 @@ def update_specific_social_media_link_service(user_id, link_id, updated_link):
 
     cursor = execute_query(update_query, tuple(update_values), commit=True)
     if cursor.rowcount == 0:
-        return 'No update needed', 200
+        print('No update needed', 200)
+        return get_user_social_media_links_service(user_id)
 
-    return 'Social media link updated successfully', 200
+    print('Social media link updated successfully', 200)
+    return get_user_social_media_links_service(user_id)
+
 
 # todo: return user social media links (list)
 def add_social_media_link_service(user_id, socials_data):
@@ -265,7 +280,9 @@ def add_social_media_link_service(user_id, socials_data):
             VALUES (?, ?)
         """, (user_id, link_id), commit=True)
 
-    return 'Social media links added successfully', 201
+    print('Social media links added successfully', 201)
+    return get_user_social_media_links_service(user_id)
+
 
 def delete_specific_social_media_link_service(link_id, user_id):
     # Check if the social media link exists and belongs to the specified user
@@ -290,7 +307,8 @@ def delete_specific_social_media_link_service(link_id, user_id):
     if cursor.rowcount == 0:
         return 'Social media link not found', 404
 
-    return 'Social media link deleted successfully', 200
+    print('Social media link deleted successfully', 200)
+    return get_user_social_media_links_service(user_id)
 
 # todo: return user interests
 def add_interest_service(user_id, interest_data):
@@ -299,7 +317,8 @@ def add_interest_service(user_id, interest_data):
         if category_id is not None:
             execute_query("INSERT INTO UserInterests (userId, categoryId) VALUES (?, ?)", (user_id, category_id), commit=True)
 
-    return 'Interests added successfully', 201
+    print('Interests added successfully', 201)
+    return get_user_interests_service(user_id)
 
 
 def delete_interest_service(user_id, category_id):
@@ -308,7 +327,8 @@ def delete_interest_service(user_id, category_id):
     if cursor.rowcount == 0:
         return 'Interest not found', 404
 
-    return 'Interest deleted successfully', 200
+    print('Interest deleted successfully', 200)
+    return get_user_interests_service(user_id)
 
 
 def toggle_follow_user_service(user_id, username):

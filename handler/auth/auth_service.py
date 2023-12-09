@@ -57,10 +57,18 @@ def get_revoked_token_service(jti):
 def login_user_service(username, password):
     try:
         user = execute_query("SELECT * FROM Users WHERE username = ?", (username,), fetchone=True)
+        user_data = {}
+        
         if user and bcrypt.check_password_hash(user['password'], password):
             access_token = create_access_token(identity=username, fresh=True, expires_delta=False)
             refresh_token = create_refresh_token(identity=username)
-            return {"access_token": access_token, "refresh_token": refresh_token}, 200
+
+            user_dict = {key: user[key] for key in user.keys()}
+            user_data['user'] = user_dict
+            user_data['access_token'] = access_token
+            user_data['refresh_token'] = refresh_token
+            
+            return user_data, 200
 
         return {'error': 'Invalid username or password'}, 401
 

@@ -60,8 +60,8 @@ def get_user_by_username(username):
 def update_user(user_id):
     try:
         updated_user = request.json
-        message, status_code = update_user_service(user_id=user_id, updated_user=updated_user)
-        return jsonify({'message': message}), status_code
+        user, status_code = update_user_service(user_id=user_id, updated_user=updated_user)
+        return jsonify(user), status_code
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
