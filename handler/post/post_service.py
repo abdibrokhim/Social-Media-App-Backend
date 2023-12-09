@@ -22,17 +22,20 @@ def get_post_by_id_service(post_id):
         # Increment the activity level count
         execute_query(
             "UPDATE Posts SET activityLevel = activityLevel + 1 WHERE id = ?", (post_id,), commit=True)
-        # Fetch post categories
-        categories_cursor = execute_query("""
-            SELECT c.* FROM PostCategories pc
-            JOIN Categories c ON pc.categoryId = c.id
-            WHERE pc.postId = ? AND c.isDeleted = 0
-        """, (post_id,))
-        post_data['categories'] = [dict(row)
-                                   for row in categories_cursor.fetchall()]
+
+        post_data['categories'] = fetch_post_categories(post_id)
 
         return post_data
     return None
+
+
+def fetch_post_categories(post_id):
+    categories_cursor = execute_query("""
+        SELECT c.* FROM PostCategories pc
+        JOIN Categories c ON pc.categoryId = c.id
+        WHERE pc.postId = ? AND c.isDeleted = 0
+    """, (post_id,))
+    return [dict(row) for row in categories_cursor.fetchall()]
 
 
 def create_post_service(new_post, username):
@@ -201,12 +204,7 @@ def fetch_trending_posts(limit, excluded_ids):
 
     # Fetch post categories
     for post in trending_posts:
-        categories_cursor = execute_query("""
-            SELECT c.* FROM PostCategories pc
-            JOIN Categories c ON pc.categoryId = c.id
-            WHERE pc.postId = ? AND c.isDeleted = 0
-        """, (post['id'],))
-        post['categories'] = [dict(row) for row in categories_cursor.fetchall()]
+        post['categories'] = fetch_post_categories(post['id'])
 
     return trending_posts
 
@@ -225,12 +223,7 @@ def fetch_new_posts(limit, excluded_ids):
     
     # Fetch post categories
     for post in new_posts:
-        categories_cursor = execute_query("""
-            SELECT c.* FROM PostCategories pc
-            JOIN Categories c ON pc.categoryId = c.id
-            WHERE pc.postId = ? AND c.isDeleted = 0
-        """, (post['id'],))
-        post['categories'] = [dict(row) for row in categories_cursor.fetchall()]
+        post['categories'] = fetch_post_categories(post['id'])
     return new_posts
 
 
@@ -251,12 +244,8 @@ def fetch_diverse_posts(limit, excluded_ids):
     
     # Fetch post categories
     for post in diverse_posts:
-        categories_cursor = execute_query("""
-            SELECT c.* FROM PostCategories pc
-            JOIN Categories c ON pc.categoryId = c.id
-            WHERE pc.postId = ? AND c.isDeleted = 0
-        """, (post['id'],))
-        post['categories'] = [dict(row) for row in categories_cursor.fetchall()]
+        
+        post['categories'] = fetch_post_categories(post['id'])
 
     return diverse_posts
 

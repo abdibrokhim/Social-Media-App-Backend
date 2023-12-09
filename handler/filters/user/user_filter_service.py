@@ -4,7 +4,7 @@ from handler.query_helpers import execute_query
 def get_filter_users_service(query):
 
     users_cursor = execute_query("""
-        SELECT id, username, profileImage 
+        SELECT id AS userId, username, profileImage
         FROM Users
         WHERE (username LIKE ? OR firstName LIKE ? OR lastName LIKE ? OR email LIKE ?) AND isDeleted = 0 ORDER BY activityLevel DESC
     """, (query, query, query, query))
