@@ -6,6 +6,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token
 
 bcrypt = Bcrypt()
 
+
 def register_user_service(username, email, password):
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
     try:
@@ -18,6 +19,7 @@ def register_user_service(username, email, password):
 
         link_user_with_meta_info(user_id, meta_info_id)
 
+        print({'message': 'User registered successfully', 'on': 'register_user_service','timestamp': datetime.now()})
         return 'User registered successfully', 201
 
     except sqlite3.Error as e:
@@ -51,6 +53,8 @@ def link_user_with_meta_info(user_id, meta_info_id):
 
 def get_revoked_token_service(jti):
     token = execute_query("SELECT * FROM RevokedTokens WHERE jti = ?", (jti,), fetchone=True)
+    
+    print({'message': 'returning revoked token', 'on': 'get_revoked_token_service','timestamp': datetime.now()})
     return token
 
 
@@ -68,8 +72,9 @@ def login_user_service(username, password):
             user_data['access_token'] = access_token
             user_data['refresh_token'] = refresh_token
             
+            print({'message': 'returning user data', 'on': 'login_user_service','timestamp': datetime.now()})
             return user_data, 200
-
+        print({'message': 'Invalid username or password', 'on': 'login_user_service','timestamp': datetime.now()})
         return {'error': 'Invalid username or password'}, 401
 
     except sqlite3.Error as e:
@@ -80,12 +85,17 @@ def forgot_password_service(email):
 
     user = execute_query("SELECT * FROM Users WHERE email = ?", (email,), fetchone=True)
     if user:
+        print({'message': 'Email sent successfully', 'on': 'forgot_password_service', 'timestamp': datetime.now()})
         return 'Email sent successfully', 200
-
+    
+    print({'message': 'User with this email does not exist', 'on': 'forgot_password_service', 'timestamp': datetime.now()})
     return 'User with this email does not exist', 404
+
 
 def logout_user_service(jti):
     execute_query("INSERT INTO RevokedTokens (jti, revoked_at) VALUES (?, ?)", (jti, datetime.now()), commit=True)
+    
+    print({'message': 'Token revoked successfully', 'on': 'logout_user_service', 'timestamp': datetime.now()})
     return "Token revoked successfully", 200
 
    

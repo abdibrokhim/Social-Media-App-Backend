@@ -22,7 +22,9 @@ from handler.post.post_service import (
     get_made_for_you_posts_service,
     get_post_owner_service,
     like_post_service,
-    unlike_post_service
+    unlike_post_service,
+    clear_high_activity_posts_for_user_service,
+    get_all_from_user_post_views_service
 )
 
 post_bp = Blueprint('post', __name__)
@@ -48,7 +50,7 @@ def get_all_posts():
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/<int:post_id>', methods=['GET'])
-# @jwt_required()
+@jwt_required()
 def get_post_by_id(post_id):
 
     try:
@@ -90,7 +92,7 @@ def toggle_like_post(post_id):
     
 
 @post_bp.route('/api/posts/<int:post_id>/like', methods=['POST'])
-# @jwt_required()
+@jwt_required()
 def like_post(post_id):
         
     username = get_jwt_identity()
@@ -104,7 +106,7 @@ def like_post(post_id):
 
 
 @post_bp.route('/api/posts/<int:post_id>/unlike', methods=['POST'])
-# @jwt_required()
+@jwt_required()
 def unlike_post(post_id):
             
     username = get_jwt_identity()
@@ -118,7 +120,7 @@ def unlike_post(post_id):
 
 
 @post_bp.route('/api/posts/<post_id>', methods=['PATCH'])
-# @jwt_required()
+@jwt_required()
 def update_post(post_id):
     updated_post = request.json
     try:
@@ -129,7 +131,7 @@ def update_post(post_id):
     
 
 @post_bp.route('/api/posts/<int:post_id>/likes', methods=['GET'])
-# @jwt_required()
+@jwt_required()
 def get_post_likes(post_id):
     try:
         likes = get_post_likes_service(post_id)
@@ -139,7 +141,7 @@ def get_post_likes(post_id):
 
 
 @post_bp.route('/api/posts/<int:post_id>/liked-users', methods=['GET'])
-# @jwt_required()
+@jwt_required()
 def get_post_liked_users(post_id):
     try:
         users = get_post_liked_users_service(post_id)
@@ -149,7 +151,7 @@ def get_post_liked_users(post_id):
 
 
 @post_bp.route('/api/posts/<int:post_id>/owner', methods=['GET'])
-# @jwt_required()
+@jwt_required()
 def get_post_owner(post_id):
     try:
         owner = get_post_owner_service(post_id)
@@ -189,7 +191,7 @@ def get_posts_by_category(category_id):
 
 
 @post_bp.route('/api/posts/explore', methods=['GET'])
-# @jwt_required()
+@jwt_required()
 def get_explore_posts():
     # Accessing query parameters
     trending_posts_limit = request.args.get('trending', type=int)
@@ -208,7 +210,7 @@ def get_explore_posts():
 def get_explore_trending_posts():
     # Accessing query parameters
     limit = request.args.get('limit', type=int)
-    excluded_ids = []
+    excluded_ids = set()
 
     try:
         explore_posts = fetch_trending_posts(limit, excluded_ids)
@@ -222,7 +224,7 @@ def get_explore_trending_posts():
 def get_explore_new_posts():
     # Accessing query parameters
     limit = request.args.get('limit', type=int)
-    excluded_ids = []
+    excluded_ids = set()
 
     try:
         explore_posts = fetch_new_posts(limit, excluded_ids)
@@ -236,7 +238,7 @@ def get_explore_new_posts():
 def get_explore_diverse_posts():
     # Accessing query parameters
     limit = request.args.get('limit', type=int)
-    excluded_ids = []
+    excluded_ids = set()
 
     try:
         explore_posts = fetch_diverse_posts(limit, excluded_ids)
@@ -253,7 +255,31 @@ def get_made_for_you_posts():
 
     try:
         username = get_jwt_identity()
-        posts = get_made_for_you_posts_service(username=username, limit=limit, offset=offset)
+        posts = get_made_for_you_posts_service(username=username, page_size=limit, page_number=offset)
+        return jsonify(posts)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@post_bp.route('/api/posts/made-for-you/refresh', methods=['DELETE'])
+@jwt_required()
+def clear_high_activity_posts_for_user():
+    activity_level_threshold = request.args.get('activity_level_threshold', type=int)
+
+    try:
+        username = get_jwt_identity()
+        posts = clear_high_activity_posts_for_user_service(username=username, activity_level_threshold=activity_level_threshold)
+        return jsonify(posts)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@post_bp.route('/api/posts/made-for-you/bucket', methods=['GET'])
+@jwt_required()
+def get_all_from_user_post_views():
+    try:
+        username = get_jwt_identity()
+        posts = get_all_from_user_post_views_service(username=username)
         return jsonify(posts)
     except Exception as e:
         return jsonify({'error': str(e)}), 500

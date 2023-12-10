@@ -148,8 +148,8 @@ def unlike_post_service(username, post_id):
 
 def get_post_likes_service(post_id):
     cursor = execute_query(
-        "SELECT COUNT(*) AS likes FROM PostLikes WHERE postId = ?", (post_id,))
-    return cursor.fetchone()['likes']
+        "SELECT COUNT(*) AS likes FROM PostLikes WHERE postId = ?", (post_id,), fetchone=True)
+    return cursor['likes']
 
 
 def get_post_liked_users_service(post_id):
@@ -274,34 +274,84 @@ def fetch_diverse_posts(limit, excluded_ids):
     return diverse_posts
 
 
-def get_made_for_you_posts_service(username, limit, offset):
+def get_made_for_you_posts_service(username, page_size, page_number):
     # Fetch user ID
     user_id = execute_query(
-        "SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+        "SELECT id FROM Users WHERE username = ?", (username,), fetchone=True
+    )['id']
+
+    # Return empty list if no such user found
+    if not user_id:
+        return []
 
     # Fetch user interests
     interests_cursor = execute_query(
-        "SELECT categoryId FROM UserInterests WHERE userId = ?", (user_id,))
+        "SELECT categoryId FROM UserInterests WHERE userId = ?", (user_id,)
+    )
     interests = interests_cursor.fetchall()
 
-    # If user has no interests, return explore posts (or an empty list)
+    # Return explore posts (or an empty list) if the user has no interests
     if not interests:
-        return []  # Or call a function to return explore posts
+        return get_explore_posts_service(trending_limit=page_size, new_limit=page_size, diverse_limit=page_size)
 
     # Convert interests to a list of category IDs
     category_ids = [interest['categoryId'] for interest in interests]
 
-    # Building the query for personalized posts
+    # Calculate offset based on page number
+    offset = (page_number - 1) * page_size
+
+    # Building the query for personalized posts, excluding already viewed posts
     query = """
-        SELECT p.* FROM Posts p
+        SELECT DISTINCT p.* FROM Posts p
         JOIN PostCategories pc ON p.id = pc.postId
+        LEFT JOIN UserPostViews upv ON p.id = upv.postId AND upv.userId = ?
         WHERE pc.categoryId IN ({})
         AND p.isDeleted = 0
+        AND upv.id IS NULL
         ORDER BY p.activityLevel DESC
         LIMIT ? OFFSET ?
     """.format(','.join('?' * len(category_ids)))
 
-    parameters = category_ids + [limit, offset]
+    parameters = [user_id] + category_ids + [page_size, offset]
 
+    # Execute the query and return the results
     posts_cursor = execute_query(query, parameters)
     return [dict(row) for row in posts_cursor.fetchall()]
+
+
+def clear_high_activity_posts_for_user_service(username, activity_level_threshold):
+    # Fetch user ID
+    user_id = execute_query(
+        "SELECT id FROM Users WHERE username = ?", (username,), fetchone=True
+    )['id']
+
+    # Return an error message if no such user found
+    if not user_id:
+        return "User not found"
+
+    # Delete entries from UserPostViews for posts with high activity level
+    delete_query = """
+        DELETE FROM UserPostViews
+        WHERE userId = ?
+        AND postId IN (
+            SELECT id FROM Posts
+            WHERE activityLevel > ?
+            AND isDeleted = 0
+        )
+    """
+
+    # Execute the delete query
+    execute_query(delete_query, (user_id, activity_level_threshold))
+
+    return "High activity posts cleared from user's view history"
+
+
+def get_all_from_user_post_views_service(username):
+    # Fetch user ID
+    user_id = execute_query(
+        "SELECT id FROM Users WHERE username = ?", (username,), fetchone=True
+    )['id']
+
+    cursor = execute_query("SELECT * FROM UserPostViews WHERE userId = ?", (user_id,))
+    
+    return [dict(row) for row in cursor.fetchall()]

@@ -57,3 +57,5 @@ def create_post_categories_table():
     except Exception as e:
         print(e)
         return False
+
+

@@ -29,7 +29,7 @@ from handler.detection import vision_handler
 from handler.filters.user import user_filter_routes
 from handler.filters.post import post_filter_routes
 from handler.auth.auth_routes import get_revoked_token
-from handler.user.user_routes import get_user_by_username
+from handler.user.user_service import get_user_by_username_service
 
 
 def setup_logging():
@@ -81,7 +81,7 @@ cors = CORS(app)
 @jwt.user_lookup_loader
 def user_lookup_callback(_jwt_headers, jwt_data):
     identity = jwt_data["sub"]
-    return get_user_by_username(identity)
+    return get_user_by_username_service(identity)
 
 @jwt.expired_token_loader
 def expired_token_callback(jwt_header, jwt_data):

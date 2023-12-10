@@ -32,7 +32,7 @@ bcrypt = Bcrypt()
 
 
 @user_bp.route('/api/users/<int:user_id>', methods=['GET'])
-# @jwt_required()
+@jwt_required()
 def get_user_by_id(user_id):
     try:
         user_data = get_user_by_id_service(user_id=user_id)
@@ -56,12 +56,12 @@ def get_user_by_username(username):
 
 
 @user_bp.route('/api/users/<int:user_id>', methods=['PATCH'])
-# @jwt_required()
+@jwt_required()
 def update_user(user_id):
     try:
         updated_user = request.json
-        user, status_code = update_user_service(user_id=user_id, updated_user=updated_user)
-        return jsonify(user), status_code
+        user = update_user_service(user_id=user_id, updated_user=updated_user)
+        return jsonify(user)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -77,6 +77,7 @@ def delete_user(user_id):
 
 # API endpoint to get all deleted users
 @user_bp.route('/api/users/deleted', methods=['GET'])
+@jwt_required()
 def get_all_deleted_users():
     try:
         users = get_all_deleted_users_service()
@@ -86,6 +87,7 @@ def get_all_deleted_users():
 
 # API endpoint to get all users (including deleted users)
 @user_bp.route('/api/users/all', methods=['GET'])
+@jwt_required()
 def get_all_users():
 
     try:
@@ -97,6 +99,7 @@ def get_all_users():
 
 # API endpoint to get all alive users (isDeleted = false)
 @user_bp.route('/api/users/live', methods=['GET'])
+@jwt_required()
 def get_all_alive_users():
 
     try:
@@ -144,7 +147,7 @@ def get_user_social_media_links(user_id):
         social_media_links = get_user_social_media_links_service(user_id=user_id)
 
         if social_media_links:
-            return jsonify(dict(social_media_links))
+            return jsonify(social_media_links)
         return jsonify({'message': 'SocialMediaLinks not found'}), 404
 
     except Exception as e:
@@ -159,7 +162,7 @@ def get_user_interests(user_id):
         interests = get_user_interests_service(user_id=user_id)
 
         if interests:
-            return jsonify(dict(interests))
+            return jsonify(interests)
         return jsonify({'message': 'Interests not found'}), 404
 
     except Exception as e:
@@ -171,8 +174,8 @@ def get_user_interests(user_id):
 def update_specific_social_media_link(user_id, link_id):
     try:
         updated_link = request.json
-        message, status_code = update_specific_social_media_link_service(user_id=user_id, link_id=link_id, updated_link=updated_link)
-        return jsonify({'message': message}), status_code
+        sml = update_specific_social_media_link_service(user_id=user_id, link_id=link_id, updated_link=updated_link)
+        return jsonify({'social_media_links': sml})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -182,8 +185,8 @@ def update_specific_social_media_link(user_id, link_id):
 def add_social_media_link(user_id):
     try:
         socials_data = request.json
-        message, status_code = add_social_media_link_service(user_id=user_id, socials_data=socials_data)
-        return jsonify({'message': message}), status_code
+        sml = add_social_media_link_service(user_id=user_id, socials_data=socials_data)
+        return jsonify({'social_media_links': sml})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -193,8 +196,8 @@ def add_social_media_link(user_id):
 @jwt_required()
 def delete_specific_social_media_link(user_id, link_id):
     try:
-        message, status_code = delete_specific_social_media_link_service(user_id=user_id, link_id=link_id)
-        return jsonify({'message': message}), status_code
+        sml = delete_specific_social_media_link_service(user_id=user_id, link_id=link_id)
+        return jsonify({'social_media_links': sml})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -206,8 +209,8 @@ def add_interest(user_id):
     interest_data = request.json
 
     try:
-        message, status_code = add_interest_service(user_id=user_id, interest_data=interest_data)
-        return jsonify({'message': message}), status_code
+        interests = add_interest_service(user_id=user_id, interest_data=interest_data)
+        return jsonify({'interests': interests})
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -218,8 +221,8 @@ def add_interest(user_id):
 def delete_interest(user_id, category_id):
 
     try:
-        message, status_code = delete_interest_service(user_id=user_id, category_id=category_id)
-        return jsonify({'message': message}), status_code
+        interests = delete_interest_service(user_id=user_id, category_id=category_id)
+        return jsonify({'interests': interests})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

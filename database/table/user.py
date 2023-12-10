@@ -162,3 +162,21 @@ def create_user_posts_table():
     except Exception as e:
         print(e)
         return False
+
+
+def create_user_post_views_table():
+    try:
+        get_cursor().execute('''
+                                CREATE TABLE IF NOT EXISTS UserPostViews (
+                                    id INTEGER PRIMARY KEY,
+                                    userId INTEGER,
+                                    postId INTEGER,
+                                    FOREIGN KEY (userId) REFERENCES Users(id),
+                                    FOREIGN KEY (postId) REFERENCES Posts(id)
+                                );
+                            ''')
+        get_cursor().close()
+        return True
+    except Exception as e:
+        print(e)
+        return False

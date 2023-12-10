@@ -26,7 +26,7 @@ def register():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@auth_bp.route("/api/new_access_token", methods=["GET"])
+@auth_bp.route("/api/new-access-token", methods=["GET"])
 @jwt_required(refresh=True)
 def refresh_access():
     try:
@@ -43,7 +43,7 @@ def whoami():
     try:
         user_identity = get_jwt_identity()
 
-        return jsonify({"user": user_identity})
+        return jsonify({"username": user_identity})
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -67,7 +67,7 @@ def login():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@auth_bp.route("/api/forgot_password", methods=["POST"])
+@auth_bp.route("/api/forgot-password", methods=["POST"])
 def forgot_password():
     data = request.json
 
