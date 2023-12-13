@@ -24,7 +24,8 @@ from handler.post.post_service import (
     like_post_service,
     unlike_post_service,
     clear_high_activity_posts_for_user_service,
-    get_all_from_user_post_views_service
+    get_all_from_user_post_views_service,
+    is_liked_service
 )
 
 post_bp = Blueprint('post', __name__)
@@ -118,6 +119,19 @@ def unlike_post(post_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@post_bp.route('/api/posts/<int:post_id>/is-liked', methods=['GET'])
+@jwt_required()
+def is_liked(post_id):
+                
+    username = get_jwt_identity()
+
+    try:
+        is_liked = is_liked_service(post_id=post_id, username=username)
+        return jsonify({'isLiked': is_liked})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/<post_id>', methods=['PATCH'])
 @jwt_required()

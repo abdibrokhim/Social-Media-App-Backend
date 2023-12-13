@@ -2,6 +2,7 @@ from httpx import get
 from handler.query_helpers import execute_query
 from datetime import datetime
 
+
 def get_user_by_id_service(user_id):
     # Fetch user details
     user = execute_query("SELECT * FROM Users WHERE id = ?", (user_id,), fetchone=True)
@@ -59,6 +60,15 @@ def get_user_by_id_service(user_id):
     execute_query("UPDATE Users SET activityLevel = activityLevel + 1 WHERE id = ?", (user_id,), commit=True)
 
     return user_data
+
+
+def get_user_by_id_small_service(user_id):
+    # Fetch user details
+    user = execute_query("SELECT * FROM Users WHERE id = ?", (user_id,), fetchone=True)
+
+    if user is None:
+        return None
+    return dict(user)
 
 
 def get_user_by_username_service(username):
@@ -368,8 +378,8 @@ def is_following_service(user_id, username):
     is_followed = execute_query("SELECT * FROM UserFollowers WHERE followingId = ? AND followerId = ?", (user_id, follower_id), fetchone=True)
 
     if is_followed:
-        return True
-    return False
+        return 1
+    return 0
 
 
 def follow_user_service(user_id, username):

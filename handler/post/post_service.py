@@ -146,6 +146,17 @@ def unlike_post_service(username, post_id):
     return get_post_likes_service(post_id)
 
 
+def is_liked_service(post_id, username):
+    user_id = execute_query(
+        "SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    is_liked = execute_query("SELECT * FROM PostLikes WHERE postId = ? AND userId = ?", (post_id, user_id), fetchone=True)
+
+    if is_liked:
+        return 1
+    return 0
+
+
 def get_post_likes_service(post_id):
     cursor = execute_query(
         "SELECT COUNT(*) AS likes FROM PostLikes WHERE postId = ?", (post_id,), fetchone=True)
@@ -179,7 +190,7 @@ def delete_post_service(post_id):
                   (post_id,), commit=True)
     print('Post deleted successfully', 200)
     # return post_id
-    return post_id, 200
+    return post_id
 
 def get_deleted_posts_service():
     cursor = execute_query("SELECT * FROM Posts WHERE isDeleted = 1")

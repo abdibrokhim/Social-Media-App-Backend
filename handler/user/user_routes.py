@@ -6,6 +6,7 @@ from flask_jwt_extended import (
 from flask import Blueprint, jsonify, request
 from handler.user.user_service import (
     get_user_by_id_service,
+    get_user_by_id_small_service,
     get_user_by_username_service,
     update_user_service,
     delete_user_service,
@@ -36,6 +37,18 @@ bcrypt = Bcrypt()
 def get_user_by_id(user_id):
     try:
         user_data = get_user_by_id_service(user_id=user_id)
+        if user_data:
+            return jsonify(user_data)
+        return jsonify({'message': 'User not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@user_bp.route('/api/users/<int:user_id>/small', methods=['GET'])
+@jwt_required()
+def get_user_by_id_small(user_id):
+    try:
+        user_data = get_user_by_id_small_service(user_id=user_id)
         if user_data:
             return jsonify(user_data)
         return jsonify({'message': 'User not found'}), 404
@@ -276,7 +289,7 @@ def unfollow_user(user_id):
         return jsonify({'error': str(e)}), 500
 
 
-@user_bp.route('/api/users/<int:user_id>/is-following', methods=['POST'])
+@user_bp.route('/api/users/<int:user_id>/is-following', methods=['GET'])
 @jwt_required()
 def is_following(user_id):
     # user_id => user being followed
