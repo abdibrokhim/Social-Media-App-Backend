@@ -199,11 +199,18 @@ def get_deleted_posts_service():
 
 def get_posts_by_category_service(category_id):
     cursor = execute_query("""
-        SELECT p.* FROM Posts p
-        JOIN PostCategories pc ON p.id = pc.postId
+        SELECT p.id AS postId, p.title, p.image FROM Posts p
+        JOIN PostCategories pc ON postId = pc.postId
         WHERE pc.categoryId = ? AND p.isDeleted = 0
     """, (category_id,))
-    return [dict(row) for row in cursor.fetchall()]
+    
+    posts = [dict(row) for row in cursor.fetchall()]
+    
+    # Fetch post categories
+    for post in posts:
+        post['categories'] = fetch_post_categories(post['postId'])
+
+    return posts
 
 
 def get_explore_posts_service(trending_limit, new_limit, diverse_limit):
@@ -224,7 +231,8 @@ def get_explore_posts_service(trending_limit, new_limit, diverse_limit):
 
 def fetch_trending_posts(limit, excluded_ids):
     query = """
-        SELECT p.*, COUNT(pl.userId) AS likes FROM Posts p
+        SELECT p.id AS postId, p.title, p.image, COUNT(pl.userId) AS likes 
+        FROM Posts p
         JOIN PostLikes pl ON p.id = pl.postId
         WHERE p.isDeleted = 0 AND p.id NOT IN ({})
         GROUP BY p.id
@@ -235,18 +243,19 @@ def fetch_trending_posts(limit, excluded_ids):
     cursor = execute_query(query, tuple(excluded_ids) + (limit,))
     trending_posts = [dict(row) for row in cursor.fetchall()]
 
-    excluded_ids.update(post['id'] for post in trending_posts)
+    excluded_ids.update(post['postId'] for post in trending_posts)
 
     # Fetch post categories
     for post in trending_posts:
-        post['categories'] = fetch_post_categories(post['id'])
+        post['categories'] = fetch_post_categories(post['postId'])
 
     return trending_posts
 
 
 def fetch_new_posts(limit, excluded_ids):
     query = """
-        SELECT * FROM Posts
+        SELECT id AS postId, title, image 
+        FROM Posts
         WHERE isDeleted = 0 AND id NOT IN ({})
         ORDER BY createdAt DESC
         LIMIT ?
@@ -254,17 +263,18 @@ def fetch_new_posts(limit, excluded_ids):
 
     cursor = execute_query(query, tuple(excluded_ids) + (limit,))
     new_posts = [dict(row) for row in cursor.fetchall()]
-    excluded_ids.update(post['id'] for post in new_posts)
+    excluded_ids.update(post['postId'] for post in new_posts)
     
     # Fetch post categories
     for post in new_posts:
-        post['categories'] = fetch_post_categories(post['id'])
+        post['categories'] = fetch_post_categories(post['postId'])
     return new_posts
 
 
 def fetch_diverse_posts(limit, excluded_ids):
     query = """
-        SELECT DISTINCT p.*, c.name AS category_name FROM Posts p
+        SELECT DISTINCT p.id AS postId, p.title, p.image
+        FROM Posts p
         JOIN PostCategories pc ON p.id = pc.postId
         JOIN Categories c ON pc.categoryId = c.id
         WHERE p.activityLevel > 0 AND p.isDeleted = 0 AND p.id NOT IN ({})
@@ -275,12 +285,12 @@ def fetch_diverse_posts(limit, excluded_ids):
 
     cursor = execute_query(query, tuple(excluded_ids) + (limit,))
     diverse_posts = [dict(row) for row in cursor.fetchall()]
-    excluded_ids.update(post['id'] for post in diverse_posts)
+    excluded_ids.update(post['postId'] for post in diverse_posts)
     
     # Fetch post categories
     for post in diverse_posts:
         
-        post['categories'] = fetch_post_categories(post['id'])
+        post['categories'] = fetch_post_categories(post['postId'])
 
     return diverse_posts
 
@@ -313,7 +323,8 @@ def get_made_for_you_posts_service(username, page_size, page_number):
 
     # Building the query for personalized posts, excluding already viewed posts
     query = """
-        SELECT DISTINCT p.* FROM Posts p
+        SELECT DISTINCT p.id AS postId, p.title, p.image 
+        FROM Posts p
         JOIN PostCategories pc ON p.id = pc.postId
         LEFT JOIN UserPostViews upv ON p.id = upv.postId AND upv.userId = ?
         WHERE pc.categoryId IN ({})
@@ -327,7 +338,13 @@ def get_made_for_you_posts_service(username, page_size, page_number):
 
     # Execute the query and return the results
     posts_cursor = execute_query(query, parameters)
-    return [dict(row) for row in posts_cursor.fetchall()]
+    posts = [dict(row) for row in posts_cursor.fetchall()]
+    
+    # Fetch post categories
+    for post in posts:
+        post['categories'] = fetch_post_categories(post['postId'])
+    
+    return posts
 
 
 def clear_high_activity_posts_for_user_service(username, activity_level_threshold):

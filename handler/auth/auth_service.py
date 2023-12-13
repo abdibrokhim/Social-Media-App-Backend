@@ -96,6 +96,6 @@ def logout_user_service(jti):
     execute_query("INSERT INTO RevokedTokens (jti, revoked_at) VALUES (?, ?)", (jti, datetime.now()), commit=True)
     
     print({'message': 'Token revoked successfully', 'on': 'logout_user_service', 'timestamp': datetime.now()})
-    return "Token revoked successfully", 200
+    return "User logged out successfully", 200
 
    

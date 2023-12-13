@@ -22,7 +22,7 @@ def register():
 
     try:
         message, status = register_user_service(data['username'], data['email'], data['password'])
-        return jsonify({'message': message}), status
+        return jsonify({'message': message})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -84,7 +84,7 @@ def logout_user():
     try:
         jti = get_jwt()['jti']
         message, status = logout_user_service(jti=jti)
-        return jsonify({"message": message}), status
+        return jsonify({"message": message})
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
