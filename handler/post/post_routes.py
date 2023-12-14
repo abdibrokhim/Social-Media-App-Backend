@@ -85,8 +85,8 @@ def toggle_like_post(post_id):
     username = get_jwt_identity()
 
     try:
-        message, status_code = toggle_like_post_service(post_id=post_id, username=username)
-        return jsonify({'message': message}), status_code
+        message = toggle_like_post_service(post_id=post_id, username=username)
+        return jsonify({'message': message})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -99,8 +99,8 @@ def like_post(post_id):
     username = get_jwt_identity()
 
     try:
-        likes_count, status_code = like_post_service(post_id=post_id, username=username)
-        return jsonify({'likes': likes_count}), status_code
+        likes_count = like_post_service(post_id=post_id, username=username)
+        return jsonify({'likes': likes_count})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -113,8 +113,8 @@ def unlike_post(post_id):
     username = get_jwt_identity()
 
     try:
-        likes_count, status_code = unlike_post_service(post_id=post_id, username=username)
-        return jsonify({'likes': likes_count}), status_code
+        likes_count = unlike_post_service(post_id=post_id, username=username)
+        return jsonify({'likes': likes_count})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -125,13 +125,16 @@ def toggle_like_post_service(username, post_id):
 def like_post_service(username, post_id):
     user_id = execute_query(
         "SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+    
+    print('user_id: ', user_id)
 
     execute_query("INSERT INTO PostLikes (postId, userId) VALUES (?, ?)",
                   (post_id, user_id), commit=True)
 
     print('Post liked successfully', 200)
     # return likes count
-    return get_post_likes_service(post_id)
+    likes_count = get_post_likes_service(post_id)
+    return likes_count
 
 
 def unlike_post_service(username, post_id):
