@@ -5,7 +5,19 @@ from datetime import datetime
 
 def get_user_by_id_service(user_id):
     # Fetch user details
-    user = execute_query("SELECT * FROM Users WHERE id = ?", (user_id,), fetchone=True)
+    user = execute_query("""SELECT
+                                id,
+                                firstName,
+                                lastName,
+                                username,
+                                profileImage,
+                                email,
+                                activityLevel,
+                                isDeleted,
+                                isEmailValidated,
+                                createdAt,
+                                updatedAt
+                            FROM Users WHERE id = ?""", (user_id,), fetchone=True)
 
     if user is None:
         return None
@@ -64,7 +76,19 @@ def get_user_by_id_service(user_id):
 
 def get_user_by_id_small_service(user_id):
     # Fetch user details
-    user = execute_query("SELECT * FROM Users WHERE id = ?", (user_id,), fetchone=True)
+    user = execute_query("""SELECT
+                                id,
+                                firstName,
+                                lastName,
+                                username,
+                                profileImage,
+                                email,
+                                activityLevel,
+                                isDeleted,
+                                isEmailValidated,
+                                createdAt,
+                                updatedAt
+                            FROM Users WHERE id = ?""", (user_id,), fetchone=True)
 
     if user is None:
         return None

@@ -141,32 +141,32 @@ def create_categories():
 
 def create_post():
     url = "http://0.0.0.0:8000/api/posts"
-
-    limit = 2
+    limit = 10
 
     for _ in range(limit):
         fake = Faker()
+        category_ids = set()
+        while len(category_ids) < 5:
+            category_ids.add(fake.random_int(min=1, max=10))
+
+        categories = [{"categoryId": id} for id in category_ids]
+
         payload = json.dumps({
             "title": fake.sentence(),
             "description": fake.text(),
-            "image": fake.image_url(),
-            "categories": [
-                {
-                    "categoryId": 1
-                },
-                {
-                    "categoryId": 2
-                }
-            ]
+            "image": "https://picsum.photos/1016/759",
+            "categories": categories
         })
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzAxODA1MTE4LCJqdGkiOiJjZDliNDBiOS02NjdiLTRhMzMtYmMyYS0wODY4OTM3NDMwNjQiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiaWJyb2hpbSIsIm5iZiI6MTcwMTgwNTExOH0.RChfUdxHicidiaIEyPcNfaepXI3_rnRIAeooeO4i-BI'  # TEST token
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNzAxOTY5MDQ4LCJqdGkiOiJjNzU4MzQ3Ni04OTg5LTRjNjctYjRjMi00Njk3YTA5NzcwNjMiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiaWJyb2hpbSIsIm5iZiI6MTcwMTk2OTA0OH0.x583dCYfJ-8YZpIBVww_TKXr-tIyWFw2JmmYHbETaFE' # TEST token
         }
 
         response = requests.request("POST", url, headers=headers, data=payload)
 
         print(response.text)
+
+
 
 
 def follow_user():
@@ -239,12 +239,12 @@ def get_all_posts():
 
 
 def main():
-    create_tables()
+    # create_tables()
     # create_user()
     # update_user_info()
     # user_filter()
     # create_categories()
-    # create_post()
+    create_post()
     # follow_user()
     # unfollow_user()
     # like_post()
