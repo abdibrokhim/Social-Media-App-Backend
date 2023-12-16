@@ -99,8 +99,8 @@ def like_post(post_id):
     username = get_jwt_identity()
 
     try:
-        likes_count = like_post_service(post_id=post_id, username=username)
-        return jsonify({'likes': likes_count})
+        likes_and_user = like_post_service(post_id=post_id, username=username)
+        return jsonify(likes_and_user)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -113,8 +113,8 @@ def unlike_post(post_id):
     username = get_jwt_identity()
 
     try:
-        likes_count = unlike_post_service(post_id=post_id, username=username)
-        return jsonify({'likes': likes_count})
+        likes_and_user = unlike_post_service(post_id=post_id, username=username)
+        return jsonify(likes_and_user)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -134,7 +134,8 @@ def like_post_service(username, post_id):
     print('Post liked successfully', 200)
     # return likes count
     likes_count = get_post_likes_service(post_id)
-    return likes_count
+    liked_users = get_post_liked_users_service(post_id)
+    return {'likes': likes_count, 'likedUsers': liked_users}
 
 
 def unlike_post_service(username, post_id):
@@ -146,7 +147,9 @@ def unlike_post_service(username, post_id):
 
     print('Post unliked successfully', 200)
     # return likes count
-    return get_post_likes_service(post_id)
+    likes_count = get_post_likes_service(post_id)
+    liked_users = get_post_liked_users_service(post_id)
+    return {'likes': likes_count, 'likedUsers': liked_users}
 
 
 def is_liked_service(post_id, username):
