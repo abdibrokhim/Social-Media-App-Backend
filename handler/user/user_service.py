@@ -1,4 +1,5 @@
 from httpx import get
+from handler.post.post_service import fetch_post_categories
 from handler.query_helpers import execute_query
 from datetime import datetime
 
@@ -212,11 +213,17 @@ def get_all_alive_users_service():
 
 def get_user_posts_service(user_id):
     cursor = execute_query("""
-        SELECT p.* FROM Posts p
+        SELECT p.id AS postId, p.image, p.title FROM Posts p
         JOIN UserPosts up ON p.id = up.postId
         WHERE up.userId = ? AND isDeleted = 0
     """, (user_id,))
-    return [dict(post) for post in cursor.fetchall()]
+    posts = [dict(post) for post in cursor.fetchall()]
+    
+    #fetch categories
+    for post in posts:
+        post['categories'] = fetch_post_categories(post['postId'])
+
+    return posts
 
 
 def get_user_meta_info_service(user_id):
