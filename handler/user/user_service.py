@@ -302,24 +302,23 @@ def update_specific_social_media_link_service(user_id, link_id, updated_link):
 # todo: return user social media links (list)
 def add_social_media_link_service(user_id, socials_data):
 
-    for social in socials_data:
-        icon = social.get('icon')
-        name = social.get('name')
-        url = social.get('url')
+    icon = socials_data.get('icon')
+    name = socials_data.get('name')
+    url = socials_data.get('url')
 
-        if url is None:
-            return 'URL is required', 400
+    if url is None:
+        return 'URL is required', 400
 
-        link_id = execute_query("""
-            INSERT INTO SocialMediaLinks (icon, name, url) 
-            VALUES (?, ?, ?)
-        """, (icon, name, url), commit=True).lastrowid
+    link_id = execute_query("""
+        INSERT INTO SocialMediaLinks (icon, name, url) 
+        VALUES (?, ?, ?)
+    """, (icon, name, url), commit=True).lastrowid
 
-        # Link social media links to the user
-        execute_query("""
-            INSERT INTO UserSocialMediaLinks (userId, socialMediaLinkId) 
-            VALUES (?, ?)
-        """, (user_id, link_id), commit=True)
+    # Link social media links to the user
+    execute_query("""
+        INSERT INTO UserSocialMediaLinks (userId, socialMediaLinkId) 
+        VALUES (?, ?)
+    """, (user_id, link_id), commit=True)
 
     print('Social media links added successfully', 201)
     return get_user_social_media_links_service(user_id)
