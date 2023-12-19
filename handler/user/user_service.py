@@ -340,7 +340,7 @@ def delete_specific_social_media_link_service(link_id, user_id):
         return 'Social media link not found or does not belong to the specified user', 404
 
     # Delete the social media link
-    delete_query = "DELETE FROM SocialMediaLinks WHERE socialMediaLinkId = ? AND userId = ?"
+    delete_query = "DELETE FROM UserSocialMediaLinks WHERE socialMediaLinkId = ? AND userId = ?"
     delete_params = (link_id, user_id)
 
     cursor = execute_query(delete_query, delete_params, commit=True)

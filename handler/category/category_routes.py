@@ -17,8 +17,8 @@ from handler.category.category_service import (
 
 category_bp = Blueprint('category', __name__)
 
-
-@category_bp.route('/api/categories', methods=['GET'])
+# get non deleted categories
+@category_bp.route('/api/categories/live', methods=['GET'])
 @jwt_required()
 def get_categories():
     try:
