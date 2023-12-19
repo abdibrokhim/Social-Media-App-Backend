@@ -95,6 +95,18 @@ def get_user_by_id_small_service(user_id):
         return None
     return dict(user)
 
+def get_updated_user_service(user_id):
+    # Fetch user details
+    user = execute_query("""SELECT
+                                firstName,
+                                lastName,
+                                profileImage
+                            FROM Users WHERE id = ?""", (user_id,), fetchone=True)
+
+    if user is None:
+        return None
+    return dict(user)
+
 
 def get_user_by_username_service(username):
     # Fetch user details
@@ -352,10 +364,9 @@ def delete_specific_social_media_link_service(link_id, user_id):
 
 # todo: return user interests
 def add_interest_service(user_id, interest_data):
-    for interest in interest_data:
-        category_id = interest.get('categoryId')
-        if category_id is not None:
-            execute_query("INSERT INTO UserInterests (userId, categoryId) VALUES (?, ?)", (user_id, category_id), commit=True)
+    category_id = int(interest_data.get('categoryId'))
+    if category_id is not None:
+        execute_query("INSERT INTO UserInterests (userId, categoryId) VALUES (?, ?)", (user_id, category_id), commit=True)
 
     print('Interests added successfully', 201)
     return get_user_interests_service(user_id)

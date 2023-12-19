@@ -71,8 +71,8 @@ def create_post():
     print(f"LOG: user {username} is creating a post")
 
     try:
-        new_post = create_post_service(new_post=new_post, username=username)
-        return jsonify(new_post), 201
+        new_post_id = create_post_service(new_post=new_post, username=username)
+        return jsonify({'new_post_id': new_post_id})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

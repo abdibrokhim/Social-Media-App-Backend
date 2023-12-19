@@ -66,8 +66,8 @@ def create_post_service(new_post, username):
 
         print('Post created successfully', 201)
 
-        # return created post
-        return get_post_by_id_service(post_id)
+        # return created post id
+        return post_id
     print('Failed to insert post', 500)
     return None
 

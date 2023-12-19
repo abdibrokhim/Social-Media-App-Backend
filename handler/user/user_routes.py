@@ -25,7 +25,8 @@ from handler.user.user_service import (
     toggle_follow_user_service,
     follow_user_service,
     unfollow_user_service,
-    is_following_service
+    is_following_service,
+    get_updated_user_service
 )
 
 user_bp = Blueprint('user', __name__)
@@ -74,6 +75,16 @@ def update_user(user_id):
     try:
         updated_user = request.json
         user = update_user_service(user_id=user_id, updated_user=updated_user)
+        return jsonify(user)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+
+@user_bp.route('/api/users/<int:user_id>/updated', methods=['GET'])
+@jwt_required()
+def get_updated_user(user_id):
+    try:
+        user = get_updated_user_service(user_id=user_id)
         return jsonify(user)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
