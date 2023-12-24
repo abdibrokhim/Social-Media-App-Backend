@@ -1,7 +1,7 @@
 from httpx import get
 from handler.post.post_service import fetch_post_categories
 from handler.query_helpers import execute_query
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def get_user_by_id_service(user_id):
@@ -451,3 +451,27 @@ def unfollow_user_service(user_id, username):
     execute_query("UPDATE MetaInfo SET following = following - 1 WHERE id = (SELECT metaInfoId FROM UserMetaInfo WHERE userId = ?)", (follower_id,), commit=True)
 
     return 'User unfollowed successfully', 200
+
+
+def get_user_subscription_service(user_id):
+    cursor = execute_query("SELECT * FROM UserSubscriptions WHERE userId = ? AND expired = 0", (user_id,), fetchone=True)
+    return dict(cursor) if cursor else None
+
+
+def subscribe_service(user_id):
+    subscribed_date = datetime.now()
+    expiration_date = subscribed_date + timedelta(days=30)
+    execute_query("INSERT INTO UserSubscriptions (userId, subscribedDate, expirationDate, expired) VALUES (?, ?, ?, 0)", (user_id, subscribed_date, expiration_date), commit=True)
+    return get_user_subscription_service(user_id)
+
+
+def udpdate_user_subscription(user_id):
+    subscribedDate = datetime.now()
+    expirationDate = subscribedDate + timedelta(days=30)
+    execute_query("UPDATE UserSubscriptions SET subscribedDate = ?, expirationDate = ?, expired = 0 WHERE userId = ?", (subscribedDate, expirationDate, user_id), commit=True)
+    return get_user_subscription_service(user_id)
+
+
+def unsubscribe_service(user_id):
+    execute_query("UPDATE UserSubscriptions SET expired = 1 WHERE userId = ?", (user_id,), commit=True)
+    return get_user_subscription_service(user_id)

@@ -36,8 +36,10 @@ def create_tables():
     #     print("User follow table created successfully")
     # if create_user_posts_table():
     #     print("User posts table created successfully")
-    if create_user_post_views_table():
-        print("User post views table created successfully")
+    # if create_user_post_views_table():
+        # print("User post views table created successfully")
+    if create_user_subscription_table():
+        print("User subscription table created successfully")
     
     pass
 
@@ -239,12 +241,12 @@ def get_all_posts():
 
 
 def main():
-    # create_tables()
+    create_tables()
     # create_user()
     # update_user_info()
     # user_filter()
     # create_categories()
-    create_post()
+    # create_post()
     # follow_user()
     # unfollow_user()
     # like_post()

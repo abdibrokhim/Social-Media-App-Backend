@@ -180,3 +180,22 @@ def create_user_post_views_table():
     except Exception as e:
         print(e)
         return False
+    
+
+def create_user_subscription_table():
+    try:
+        get_cursor().execute('''
+                                CREATE TABLE IF NOT EXISTS UserSubscriptions (
+                                    id INTEGER PRIMARY KEY,
+                                    userId INTEGER,
+                                    subscribedDate DATETIME,
+                                    expirationDate DATETIME,
+                                    expired BOOLEAN NOT NULL,
+                                    FOREIGN KEY (userId) REFERENCES Users(id)
+                                );
+                            ''')
+        get_cursor().close()
+        return True
+    except Exception as e:
+        print(e)
+        return False

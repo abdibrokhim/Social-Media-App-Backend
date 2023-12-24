@@ -26,7 +26,11 @@ from handler.user.user_service import (
     follow_user_service,
     unfollow_user_service,
     is_following_service,
-    get_updated_user_service
+    get_updated_user_service,
+    get_user_subscription_service,
+    subscribe_service,
+    udpdate_user_subscription,
+    unsubscribe_service,
 )
 
 user_bp = Blueprint('user', __name__)
@@ -312,5 +316,45 @@ def is_following(user_id):
         is_following = is_following_service(user_id=user_id, username=username)
         return jsonify({'is_following': is_following})
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@user_bp.route('/api/users/<int:user_id>/subscription', methods=['GET'])
+@jwt_required()
+def get_user_subscription(user_id):
+    try:
+        subscription = get_user_subscription_service(user_id=user_id)
+        return jsonify(subscription)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+
+@user_bp.route('/api/users/<int:user_id>/subscription', methods=['POST'])
+@jwt_required()
+def subscribe(user_id):
+    try:
+        subscription = subscribe_service(user_id=user_id)
+        return jsonify(subscription)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@user_bp.route('/api/users/<int:user_id>/subscription', methods=['PATCH'])
+@jwt_required()
+def update_user_subscription(user_id):
+    try:
+        subscription = udpdate_user_subscription(user_id=user_id)
+        return jsonify(subscription)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@user_bp.route('/api/users/<int:user_id>/subscription', methods=['DELETE'])
+@jwt_required()
+def unsubscribe(user_id):
+    try:
+        subscription = unsubscribe_service(user_id=user_id)
+        return jsonify(subscription)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
