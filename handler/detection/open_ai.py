@@ -25,6 +25,7 @@ def generate_title_and_description(image_url):
                         "type": "image_url",
                         "image_url": {
                             "url": image_url,
+                            "detail": "low"
                         },
                     },
                 ],
@@ -33,6 +34,8 @@ def generate_title_and_description(image_url):
         max_tokens=300,
     )
 
-    print(response.choices[0])
+    print("response.choices[0]: ", response.choices[0])
+    response_text = response.choices[0].message.content
+    print("response_text: ", response_text)
 
-    return response.choices[0]
+    return response_text
