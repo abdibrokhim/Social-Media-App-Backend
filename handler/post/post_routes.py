@@ -25,13 +25,14 @@ from handler.post.post_service import (
     unlike_post_service,
     clear_high_activity_posts_for_user_service,
     get_all_from_user_post_views_service,
-    is_liked_service
+    is_liked_service,
+    get_viral_posts_service
 )
 
 post_bp = Blueprint('post', __name__)
 
 @post_bp.route('/api/posts/live', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_all_alive_posts():
     try:
         posts = get_all_alive_posts_service()
@@ -40,7 +41,7 @@ def get_all_alive_posts():
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/all', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_all_posts():
 
     try:
@@ -51,7 +52,7 @@ def get_all_posts():
         return jsonify({'error': str(e)}), 500
 
 @post_bp.route('/api/posts/<int:post_id>', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_post_by_id(post_id):
 
     try:
@@ -121,7 +122,7 @@ def unlike_post(post_id):
 
 
 @post_bp.route('/api/posts/<int:post_id>/is-liked', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def is_liked(post_id):
                 
     username = get_jwt_identity()
@@ -145,7 +146,7 @@ def update_post(post_id):
     
 
 @post_bp.route('/api/posts/<int:post_id>/likes', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_post_likes(post_id):
     try:
         likes = get_post_likes_service(post_id)
@@ -155,7 +156,7 @@ def get_post_likes(post_id):
 
 
 @post_bp.route('/api/posts/<int:post_id>/liked-users', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_post_liked_users(post_id):
     try:
         users = get_post_liked_users_service(post_id)
@@ -165,7 +166,7 @@ def get_post_liked_users(post_id):
 
 
 @post_bp.route('/api/posts/<int:post_id>/owner', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_post_owner(post_id):
     try:
         owner = get_post_owner_service(post_id)
@@ -195,7 +196,7 @@ def get_deleted_posts():
 
 
 @post_bp.route('/api/posts/category/<int:category_id>', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_posts_by_category(category_id):
     try:
         posts = get_posts_by_category_service(category_id)
@@ -205,7 +206,7 @@ def get_posts_by_category(category_id):
 
 
 @post_bp.route('/api/posts/explore', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_explore_posts():
     # Accessing query parameters
     trending_posts_limit = request.args.get('trending', type=int)
@@ -220,7 +221,7 @@ def get_explore_posts():
 
 
 @post_bp.route('/api/posts/explore/trending', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_explore_trending_posts():
     # Accessing query parameters
     limit = request.args.get('limit', type=int)
@@ -234,7 +235,7 @@ def get_explore_trending_posts():
 
 
 @post_bp.route('/api/posts/explore/new', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_explore_new_posts():
     # Accessing query parameters
     limit = request.args.get('limit', type=int)
@@ -248,7 +249,7 @@ def get_explore_new_posts():
 
 
 @post_bp.route('/api/posts/explore/diverse', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_explore_diverse_posts():
     # Accessing query parameters
     limit = request.args.get('limit', type=int)
@@ -270,6 +271,18 @@ def get_made_for_you_posts():
     try:
         username = get_jwt_identity()
         posts = get_made_for_you_posts_service(username=username, page_size=limit, page_number=offset)
+        return jsonify(posts)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@post_bp.route('/api/posts/viral', methods=['GET'])
+# @jwt_required()
+def get_viral_posts():
+    limit = request.args.get('limit', type=int)
+    offset = request.args.get('offset', type=int)  # Use offset for pagination
+
+    try:
+        posts = get_viral_posts_service(page_size=limit, page_number=offset)
         return jsonify(posts)
     except Exception as e:
         return jsonify({'error': str(e)}), 500

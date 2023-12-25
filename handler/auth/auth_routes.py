@@ -21,8 +21,8 @@ def register():
     data = request.json
 
     try:
-        message, status = register_user_service(data['username'], data['email'], data['password'])
-        return jsonify({'message': message})
+        username = register_user_service(data['username'], data['email'], data['password'])
+        return jsonify({'username': username})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -83,8 +83,10 @@ def forgot_password():
 def logout_user():
     try:
         jti = get_jwt()['jti']
-        message, status = logout_user_service(jti=jti)
-        return jsonify({"message": message})
+        isLogout = logout_user_service(jti=jti)
+        if isLogout:
+            return jsonify({"isLogout": 1})
+        return jsonify({"isLogout": 0})
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500

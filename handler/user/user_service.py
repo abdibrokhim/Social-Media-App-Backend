@@ -95,8 +95,14 @@ def get_user_by_id_small_service(user_id):
         return None
     return dict(user)
 
-def get_updated_user_service(user_id):
-    # Fetch user details
+def get_updated_user_service(username):
+    user = execute_query("SELECT * FROM Users WHERE username = ?", (username,), fetchone=True)
+
+    if user is None:
+        return None
+    
+    user_id = user['id']
+
     user = execute_query("""SELECT
                                 firstName,
                                 lastName,
@@ -159,7 +165,12 @@ def get_user_by_username_service(username):
     return user_data
 
 # todo: return updated user
-def update_user_service(user_id, updated_user):
+def update_user_service(username, updated_user):
+    user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    if user_id is None:
+        return None
+
     update_fields = []
     update_values = []
 
@@ -200,12 +211,17 @@ def get_updated_user_info(user_id):
     return dict(user)
 
 
-def delete_user_service(user_id):
+def delete_user_service(username):
+    user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    if user_id is None:
+        return None
+
     cursor = execute_query("UPDATE Users SET isDeleted = 1 WHERE id = ?", (user_id,), commit=True)
 
     if cursor.rowcount == 0:
-        return 'User not found', 404
-    return 'User deleted successfully', 200
+        return False
+    return True
 
 
 def get_all_deleted_users_service():
@@ -225,7 +241,7 @@ def get_all_alive_users_service():
 
 def get_user_posts_service(user_id):
     cursor = execute_query("""
-        SELECT p.id AS postId, p.image, p.title FROM Posts p
+        SELECT p.id AS postId, p.image, p.title, p.createdAt FROM Posts p
         JOIN UserPosts up ON p.id = up.postId
         WHERE up.userId = ? AND isDeleted = 0
     """, (user_id,))
@@ -265,7 +281,12 @@ def get_user_interests_service(user_id):
     return [dict(interest) for interest in cursor.fetchall()]
 
 # todo: return user social media link (updated link)
-def update_specific_social_media_link_service(user_id, link_id, updated_link):
+def update_specific_social_media_link_service(username, link_id, updated_link):
+    user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    if user_id is None:
+        return None
+
     update_fields = []
     update_values = []
 
@@ -312,7 +333,11 @@ def update_specific_social_media_link_service(user_id, link_id, updated_link):
 
 
 # todo: return user social media links (list)
-def add_social_media_link_service(user_id, socials_data):
+def add_social_media_link_service(username, socials_data):
+    user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    if user_id is None:
+        return None
 
     icon = socials_data.get('icon')
     name = socials_data.get('name')
@@ -336,7 +361,12 @@ def add_social_media_link_service(user_id, socials_data):
     return get_user_social_media_links_service(user_id)
 
 
-def delete_specific_social_media_link_service(link_id, user_id):
+def delete_specific_social_media_link_service(link_id, username):
+    user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    if user_id is None:
+        return None
+
     # Check if the social media link exists and belongs to the specified user
     link_exists_query = """
         SELECT 1 
@@ -363,7 +393,12 @@ def delete_specific_social_media_link_service(link_id, user_id):
     return get_user_social_media_links_service(user_id)
 
 # todo: return user interests
-def add_interest_service(user_id, interest_data):
+def add_interest_service(username, interest_data):
+    user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    if user_id is None:
+        return None
+
     category_id = int(interest_data.get('categoryId'))
     if category_id is not None:
         execute_query("INSERT INTO UserInterests (userId, categoryId) VALUES (?, ?)", (user_id, category_id), commit=True)
@@ -372,7 +407,12 @@ def add_interest_service(user_id, interest_data):
     return get_user_interests_service(user_id)
 
 
-def delete_interest_service(user_id, category_id):
+def delete_interest_service(username, category_id):
+    user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    if user_id is None:
+        return None
+
     cursor = execute_query("DELETE FROM UserInterests WHERE userId = ? AND categoryId = ?", (user_id, category_id), commit=True)
 
     if cursor.rowcount == 0:
@@ -453,25 +493,45 @@ def unfollow_user_service(user_id, username):
     return 'User unfollowed successfully', 200
 
 
-def get_user_subscription_service(user_id):
+def get_user_subscription_service(username):
+    user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    if user_id is None:
+        return None
+
     cursor = execute_query("SELECT * FROM UserSubscriptions WHERE userId = ? AND expired = 0", (user_id,), fetchone=True)
     return dict(cursor) if cursor else None
 
 
-def subscribe_service(user_id):
+def subscribe_service(username):
+    user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    if user_id is None:
+        return None
+    
     subscribed_date = datetime.now()
     expiration_date = subscribed_date + timedelta(days=30)
     execute_query("INSERT INTO UserSubscriptions (userId, subscribedDate, expirationDate, expired) VALUES (?, ?, ?, 0)", (user_id, subscribed_date, expiration_date), commit=True)
     return get_user_subscription_service(user_id)
 
 
-def udpdate_user_subscription(user_id):
+def udpdate_user_subscription(username):
+    user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    if user_id is None:
+        return None
+    
     subscribedDate = datetime.now()
     expirationDate = subscribedDate + timedelta(days=30)
     execute_query("UPDATE UserSubscriptions SET subscribedDate = ?, expirationDate = ?, expired = 0 WHERE userId = ?", (subscribedDate, expirationDate, user_id), commit=True)
     return get_user_subscription_service(user_id)
 
 
-def unsubscribe_service(user_id):
+def unsubscribe_service(username):
+    user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
+
+    if user_id is None:
+        return None
+
     execute_query("UPDATE UserSubscriptions SET expired = 1 WHERE userId = ?", (user_id,), commit=True)
     return get_user_subscription_service(user_id)

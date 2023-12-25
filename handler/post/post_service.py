@@ -389,3 +389,31 @@ def get_all_from_user_post_views_service(username):
     cursor = execute_query("SELECT * FROM UserPostViews WHERE userId = ?", (user_id,))
     
     return [dict(row) for row in cursor.fetchall()]
+
+
+def get_viral_posts_service(page_size, page_number):
+    # Calculate offset for pagination
+    offset = (page_number - 1) * page_size
+
+    # SQL query to fetch viral posts with pagination
+    query = """
+        SELECT p.id AS postId, p.title, p.image, COUNT(pl.userId) AS likes 
+        FROM Posts p
+        JOIN PostLikes pl ON p.id = pl.postId
+        WHERE p.isDeleted = 0
+        GROUP BY p.id
+        ORDER BY likes DESC, p.activityLevel DESC
+        LIMIT ? OFFSET ?
+    """
+
+    # Execute the query with pagination parameters
+    cursor = execute_query(query, (page_size, offset))
+
+    # Convert query results to a list of dictionaries
+    posts = [dict(row) for row in cursor.fetchall()]
+
+    # Fetch post categories for each post
+    for post in posts:
+        post['categories'] = fetch_post_categories(post['postId'])
+
+    return posts

@@ -12,7 +12,7 @@ def register_user_service(username, email, password):
     try:
         # Check if email or username already exists
         if user_exists(email, username):
-            return 'User with this email or username already exists', 409
+            return None
 
         user_id = create_user(username, email, hashed_password)
         meta_info_id = create_meta_info()
@@ -20,8 +20,9 @@ def register_user_service(username, email, password):
         link_user_with_meta_info(user_id, meta_info_id)
 
         print({'message': 'User registered successfully', 'on': 'register_user_service','timestamp': datetime.now()})
-        return 'User registered successfully', 201
-
+        # return username
+        username = execute_query("SELECT username FROM Users WHERE id = ?", (user_id,), fetchone=True)['username']
+        return username
     except sqlite3.Error as e:
         return str(e), 500
 
@@ -96,6 +97,6 @@ def logout_user_service(jti):
     execute_query("INSERT INTO RevokedTokens (jti, revoked_at) VALUES (?, ?)", (jti, datetime.now()), commit=True)
     
     print({'message': 'Token revoked successfully', 'on': 'logout_user_service', 'timestamp': datetime.now()})
-    return "User logged out successfully", 200
+    return True
 
    

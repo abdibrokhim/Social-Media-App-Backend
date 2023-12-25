@@ -19,7 +19,7 @@ category_bp = Blueprint('category', __name__)
 
 # get non deleted categories
 @category_bp.route('/api/categories/live', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_categories():
     try:
         categories = get_categories_service()
@@ -31,7 +31,7 @@ def get_categories():
 
 
 @category_bp.route('/api/categories/<int:category_id>', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_category_by_id(category_id):
     try:
         category = get_category_by_id_service(category_id=category_id)
