@@ -13,7 +13,7 @@ filter_users_bp = Blueprint('user_filter', __name__)
 bcrypt = Bcrypt()
 
 @filter_users_bp.route('/api/filter/users', methods=['POST'])
-@jwt_required()
+# @jwt_required()
 def get_filter_users():
     user_r = request.json
     
@@ -28,7 +28,7 @@ def get_filter_users():
     
 
 @filter_users_bp.route('/api/autocomplete/users', methods=['POST'])
-@jwt_required()
+# @jwt_required()
 def get_autocomplete_users():
     user_r = request.json
     

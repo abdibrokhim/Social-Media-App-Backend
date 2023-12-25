@@ -13,7 +13,7 @@ filter_posts_bp = Blueprint('post_filter', __name__)
 bcrypt = Bcrypt()
 
 @filter_posts_bp.route('/api/filter/posts', methods=['POST'])
-@jwt_required()
+# @jwt_required()
 def get_filter_posts():
     post_r = request.json
     
@@ -28,7 +28,7 @@ def get_filter_posts():
 
 
 @filter_posts_bp.route('/api/autocomplete/posts', methods=['POST'])
-@jwt_required()
+# @jwt_required()
 def get_autocomplete_posts():
     post_r = request.json
     

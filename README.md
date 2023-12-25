@@ -42,7 +42,7 @@ cp .env.example .env
 ### Run the app
 
 ```bash
-gunicorn --logger-class=config.logger.GunicornLogger service.wsgi:app --bind 0.0.0.0:8000 --workers=1
+gunicorn --logger-class=config.logger.GunicornLogger service.wsgi:app --bind 0.0.0.0:9000 --workers=1
 ```
 
 ### Or run with bash script

@@ -87,7 +87,7 @@ def update_user():
 
 @user_bp.route('/api/users/updated', methods=['GET'])
 @jwt_required()
-def get_updated_user(user_id):
+def get_updated_user():
     try:
         username = get_jwt_identity()
         user = get_updated_user_service(username=username)
