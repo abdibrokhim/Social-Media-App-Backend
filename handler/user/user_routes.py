@@ -31,6 +31,8 @@ from handler.user.user_service import (
     subscribe_service,
     udpdate_user_subscription,
     unsubscribe_service,
+    get_user_followers_list_service,
+    get_user_followings_list_service,
 )
 
 user_bp = Blueprint('user', __name__)
@@ -291,8 +293,8 @@ def follow_user(user_id):
     username = get_jwt_identity()
 
     try:
-        message, status_code = follow_user_service(user_id=user_id, username=username)
-        return jsonify({'message': message}), status_code
+        message = follow_user_service(user_id=user_id, username=username)
+        return jsonify(message)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -307,8 +309,36 @@ def unfollow_user(user_id):
     username = get_jwt_identity()
 
     try:
-        message, status_code = unfollow_user_service(user_id=user_id, username=username)
-        return jsonify({'message': message}), status_code
+        message = unfollow_user_service(user_id=user_id, username=username)
+        return jsonify(message)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+
+@user_bp.route('/api/users/<int:user_id>/followers', methods=['GET'])
+# @jwt_required()
+def get_followers_users(user_id):
+    # user_id => user being followed
+    # follower_id => user following
+
+    try:
+        followers = get_user_followers_list_service(user_id=user_id)
+        return jsonify({'users': followers})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+
+@user_bp.route('/api/users/<int:user_id>/followings', methods=['GET'])
+# @jwt_required()
+def get_followings_users(user_id):
+    # user_id => user being followed
+    # follower_id => user following
+
+    try:
+        followings = get_user_followings_list_service(user_id=user_id)
+        return jsonify({'users': followings})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

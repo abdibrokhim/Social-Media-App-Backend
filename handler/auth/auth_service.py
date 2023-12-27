@@ -74,9 +74,9 @@ def login_user_service(username, password):
             user_data['refresh_token'] = refresh_token
             
             print({'message': 'returning user data', 'on': 'login_user_service','timestamp': datetime.now()})
-            return user_data, 200
+            return user_data
         print({'message': 'Invalid username or password', 'on': 'login_user_service','timestamp': datetime.now()})
-        return {'error': 'Invalid username or password'}, 401
+        return None
 
     except sqlite3.Error as e:
         return {'error': str(e)}, 500

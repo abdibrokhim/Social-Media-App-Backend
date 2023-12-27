@@ -475,7 +475,15 @@ def follow_user_service(user_id, username):
     # Increment the following count for the follower user
     execute_query("UPDATE MetaInfo SET following = following + 1 WHERE id = (SELECT metaInfoId FROM UserMetaInfo WHERE userId = ?)", (follower_id,), commit=True)
 
-    return 'User followed successfully', 200
+    # return number of followers
+
+    followers_count = execute_query("SELECT followers FROM MetaInfo WHERE id = (SELECT metaInfoId FROM UserMetaInfo WHERE userId = ?)", (user_id,), fetchone=True)['followers']
+
+    followers_list = get_user_followers_list_service(user_id)
+
+    return {'followers_count': followers_count, 'followers_list': followers_list}
+
+
 
 
 def unfollow_user_service(user_id, username):
@@ -490,7 +498,34 @@ def unfollow_user_service(user_id, username):
     # Decrement the following count for the follower user
     execute_query("UPDATE MetaInfo SET following = following - 1 WHERE id = (SELECT metaInfoId FROM UserMetaInfo WHERE userId = ?)", (follower_id,), commit=True)
 
-    return 'User unfollowed successfully', 200
+    # return number of followers
+
+    followers_count = execute_query("SELECT followers FROM MetaInfo WHERE id = (SELECT metaInfoId FROM UserMetaInfo WHERE userId = ?)", (user_id,), fetchone=True)['followers']
+    followers_list = get_user_followers_list_service(user_id)
+
+    return {'followers_count': followers_count, 'followers_list': followers_list}
+
+
+
+
+def get_user_followers_list_service(user_id):
+    users_cursor = execute_query("""
+    SELECT u.id AS userId, u.username, u.profileImage FROM UserFollowers uf
+    JOIN Users u ON uf.followerId = u.id
+    WHERE uf.followingId = ?
+
+    """, (user_id,))
+    return [dict(row) for row in users_cursor.fetchall()]
+
+
+def get_user_followings_list_service(user_id):
+    users_cursor = execute_query("""
+    SELECT u.id AS userId, u.username, u.profileImage FROM UserFollowers uf
+    JOIN Users u ON uf.followingId = u.id
+    WHERE uf.followerId = ?
+    """, (user_id,))
+    return [dict(row) for row in users_cursor.fetchall()]
+
 
 
 def get_user_subscription_service(username):

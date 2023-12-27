@@ -62,8 +62,8 @@ def login():
     data = request.json
 
     try:
-        result, status = login_user_service(data['username'], data['password'])
-        return jsonify(result), status
+        result = login_user_service(data['username'], data['password'])
+        return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
