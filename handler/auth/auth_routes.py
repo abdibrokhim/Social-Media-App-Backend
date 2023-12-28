@@ -78,7 +78,7 @@ def forgot_password():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@auth_bp.route('/api/logout', methods=['GET'])
+@auth_bp.route('/api/logout', methods=['POST'])
 @jwt_required(verify_type=False)
 def logout_user():
     try:
