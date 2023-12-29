@@ -166,9 +166,7 @@ def get_user_meta_info(user_id):
     try:
         user_meta_info = get_user_meta_info_service(user_id=user_id)
 
-        if user_meta_info:
-            return jsonify(user_meta_info)
-        return jsonify({'message': 'UserMetaInfo not found'}), 404
+        return jsonify(user_meta_info)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -181,9 +179,7 @@ def get_user_social_media_links(user_id):
     try:
         social_media_links = get_user_social_media_links_service(user_id=user_id)
 
-        if social_media_links:
-            return jsonify(social_media_links)
-        return jsonify({'message': 'SocialMediaLinks not found'}), 404
+        return jsonify(social_media_links)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -196,9 +192,7 @@ def get_user_interests(user_id):
     try:
         interests = get_user_interests_service(user_id=user_id)
 
-        if interests:
-            return jsonify(interests)
-        return jsonify({'message': 'Interests not found'}), 404
+        return jsonify(interests)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

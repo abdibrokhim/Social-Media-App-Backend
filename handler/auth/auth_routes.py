@@ -11,7 +11,8 @@ from handler.auth.auth_service import (
     get_revoked_token_service,
     login_user_service,
     forgot_password_service,
-    logout_user_service
+    logout_user_service,
+    usernameExists
 )
 
 auth_bp = Blueprint("auth", __name__)
@@ -21,8 +22,8 @@ def register():
     data = request.json
 
     try:
-        username = register_user_service(data['username'], data['email'], data['password'])
-        return jsonify({'username': username})
+        response = register_user_service(data['username'], data['email'], data['password'])
+        return jsonify(response)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -84,9 +85,18 @@ def logout_user():
     try:
         jti = get_jwt()['jti']
         isLogout = logout_user_service(jti=jti)
-        if isLogout:
-            return jsonify({"isLogout": 1})
-        return jsonify({"isLogout": 0})
+        return jsonify(isLogout)
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@auth_bp.route('/api/usernameExists', methods=['POST'])
+def username_exists():
+    username = request.json.get('username')
+
+    try:
+        exists = usernameExists(username)
+        return jsonify({"exists": exists})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

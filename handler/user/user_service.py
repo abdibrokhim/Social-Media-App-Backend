@@ -92,8 +92,9 @@ def get_user_by_id_small_service(user_id):
                             FROM Users WHERE id = ?""", (user_id,), fetchone=True)
 
     if user is None:
-        return None
-    return dict(user)
+        return {'message': 'User not found', 'statusCode': 404}
+    return {'statusCode': 200, 'user': dict(user)}
+
 
 def get_updated_user_service(username):
     user = execute_query("SELECT * FROM Users WHERE username = ?", (username,), fetchone=True)
@@ -110,8 +111,8 @@ def get_updated_user_service(username):
                             FROM Users WHERE id = ?""", (user_id,), fetchone=True)
 
     if user is None:
-        return None
-    return dict(user)
+        return {'message': 'User not found', 'statusCode': 404}
+    return {'statusCode': 200, 'user': dict(user)}
 
 
 def get_user_by_username_service(username):
@@ -119,7 +120,7 @@ def get_user_by_username_service(username):
     user = execute_query("SELECT * FROM Users WHERE username = ?", (username,), fetchone=True)
 
     if user is None:
-        return None
+        return {'message': 'User not found', 'statusCode': 404}
     
     user_id = user['id']
     user_data = dict(user)
@@ -162,7 +163,7 @@ def get_user_by_username_service(username):
     # Increment the activity level count
     execute_query("UPDATE Users SET activityLevel = activityLevel + 1 WHERE username = ?", (username,), commit=True)
 
-    return user_data
+    return {'statusCode': 200, 'data': user_data}
 
 # todo: return updated user
 def update_user_service(username, updated_user):
@@ -365,7 +366,7 @@ def delete_specific_social_media_link_service(link_id, username):
     user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
 
     if user_id is None:
-        return None
+        return {'message': 'User not found', 'statusCode': 404}
 
     # Check if the social media link exists and belongs to the specified user
     link_exists_query = """
@@ -378,7 +379,7 @@ def delete_specific_social_media_link_service(link_id, username):
     link_exists_cursor = execute_query(link_exists_query, link_exists_params)
 
     if link_exists_cursor.fetchone() is None:
-        return 'Social media link not found or does not belong to the specified user', 404
+        return {'message': 'Social media link not found or does not belong to the specified user', 'statusCode': 404}
 
     # Delete the social media link
     delete_query = "DELETE FROM UserSocialMediaLinks WHERE socialMediaLinkId = ? AND userId = ?"
@@ -387,7 +388,7 @@ def delete_specific_social_media_link_service(link_id, username):
     cursor = execute_query(delete_query, delete_params, commit=True)
 
     if cursor.rowcount == 0:
-        return 'Social media link not found', 404
+        return {'message': 'Social media link not found or does not belong to the specified user', 'statusCode': 404}
 
     print('Social media link deleted successfully', 200)
     return get_user_social_media_links_service(user_id)
@@ -506,8 +507,6 @@ def unfollow_user_service(user_id, username):
     return {'followers_count': followers_count, 'followers_list': followers_list}
 
 
-
-
 def get_user_followers_list_service(user_id):
     users_cursor = execute_query("""
     SELECT u.id AS userId, u.username, u.profileImage FROM UserFollowers uf
@@ -527,15 +526,14 @@ def get_user_followings_list_service(user_id):
     return [dict(row) for row in users_cursor.fetchall()]
 
 
-
 def get_user_subscription_service(username):
     user_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
 
     if user_id is None:
         return None
 
-    cursor = execute_query("SELECT * FROM UserSubscriptions WHERE userId = ? AND expired = 0", (user_id,), fetchone=True)
-    return dict(cursor) if cursor else None
+    subscription = execute_query("SELECT * FROM UserSubscriptions WHERE userId = ? AND expired = 0", (user_id,), fetchone=True)
+    return dict(subscription) if subscription else {"message": "User is not subscribed", "statusCode": 404}
 
 
 def subscribe_service(username):

@@ -12,7 +12,7 @@ def register_user_service(username, email, password):
     try:
         # Check if email or username already exists
         if user_exists(email, username):
-            return None
+            return {'message': 'Email or username already exists', "statusCode": 400}
 
         user_id = create_user(username, email, hashed_password)
         meta_info_id = create_meta_info()
@@ -20,9 +20,7 @@ def register_user_service(username, email, password):
         link_user_with_meta_info(user_id, meta_info_id)
 
         print({'message': 'User registered successfully', 'on': 'register_user_service','timestamp': datetime.now()})
-        # return username
-        username = execute_query("SELECT username FROM Users WHERE id = ?", (user_id,), fetchone=True)['username']
-        return username
+        return {"message": "User registered successfully", "statusCode": 200}
     except sqlite3.Error as e:
         return str(e), 500
 
@@ -74,9 +72,9 @@ def login_user_service(username, password):
             user_data['refresh_token'] = refresh_token
             
             print({'message': 'returning user data', 'on': 'login_user_service','timestamp': datetime.now()})
-            return user_data
+            return {"message": "User logged in successfully", "statusCode": 200, "data": user_data}
         print({'message': 'Invalid username or password', 'on': 'login_user_service','timestamp': datetime.now()})
-        return None
+        return {"message": "Invalid username or password", "statusCode": 400}
 
     except sqlite3.Error as e:
         return {'error': str(e)}, 500
@@ -97,6 +95,10 @@ def logout_user_service(jti):
     execute_query("INSERT INTO RevokedTokens (jti, revoked_at) VALUES (?, ?)", (jti, datetime.now()), commit=True)
     
     print({'message': 'Token revoked successfully', 'on': 'logout_user_service', 'timestamp': datetime.now()})
-    return True
+    return {'message': 'User logout successfully', 'statusCode': 200}
 
    
+def usernameExists(username):
+    if execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True):
+        return True
+    return False
