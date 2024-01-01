@@ -28,6 +28,7 @@ from handler.auth import auth_routes
 from handler.detection import vision_handler
 from handler.filters.user import user_filter_routes
 from handler.filters.post import post_filter_routes
+from handler.subscription import subscription_routes
 from handler.auth.auth_routes import get_revoked_token
 from handler.user.user_service import get_user_by_username_service
 
@@ -132,5 +133,6 @@ app.register_blueprint(category_routes.category_bp)
 app.register_blueprint(vision_handler.vision_bp)
 app.register_blueprint(user_filter_routes.filter_users_bp)
 app.register_blueprint(post_filter_routes.filter_posts_bp)
+app.register_blueprint(subscription_routes.subscription_bp)
 app.register_error_handler(400, handle_bad_request)
 

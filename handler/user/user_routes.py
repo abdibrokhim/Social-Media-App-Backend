@@ -27,10 +27,6 @@ from handler.user.user_service import (
     unfollow_user_service,
     is_following_service,
     get_updated_user_service,
-    get_user_subscription_service,
-    subscribe_service,
-    udpdate_user_subscription,
-    unsubscribe_service,
     get_user_followers_list_service,
     get_user_followings_list_service,
 )
@@ -350,49 +346,5 @@ def is_following(user_id):
         is_following = is_following_service(user_id=user_id, username=username)
         return jsonify({'is_following': is_following})
 
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@user_bp.route('/api/users/subscription', methods=['GET'])
-@jwt_required()
-def get_user_subscription():
-    try:
-        username = get_jwt_identity()
-        subscription = get_user_subscription_service(username=username)
-        return jsonify(subscription)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    
-
-@user_bp.route('/api/users/subscription', methods=['POST'])
-@jwt_required()
-def subscribe():
-    try:
-        username = get_jwt_identity()
-        subscription = subscribe_service(username=username)
-        return jsonify(subscription)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@user_bp.route('/api/users/subscription', methods=['PATCH'])
-@jwt_required()
-def update_user_subscription():
-    try:
-        username = get_jwt_identity()
-        subscription = udpdate_user_subscription(username=username)
-        return jsonify(subscription)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@user_bp.route('/api/users/subscription', methods=['DELETE'])
-@jwt_required()
-def unsubscribe():
-    try:
-        username = get_jwt_identity()
-        subscription = unsubscribe_service(username=username)
-        return jsonify(subscription)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
