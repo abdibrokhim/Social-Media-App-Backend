@@ -465,6 +465,9 @@ def is_following_service(user_id, username):
 
 
 def follow_user_service(user_id, username):
+    if is_following_service(user_id, username) == 1:
+        return 'User already followed', 400
+    
     follower_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
 
     # Follow user, here user_id is the user being following's id and follower_id is the follower's id
@@ -488,6 +491,9 @@ def follow_user_service(user_id, username):
 
 
 def unfollow_user_service(user_id, username):
+    if is_following_service(user_id, username) == 0:
+        return 'User not followed', 400
+
     follower_id = execute_query("SELECT id FROM Users WHERE username = ?", (username,), fetchone=True)['id']
 
     # Unfollow user, here followingId is the user being followed and followerId is the user following
