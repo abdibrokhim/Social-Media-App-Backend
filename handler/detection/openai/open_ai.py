@@ -1,6 +1,8 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
+import re
+import json
 
 load_dotenv()
 
@@ -20,7 +22,7 @@ def generate_title_and_description(image_url):
                 "content": [
                     {
                         "type": "text", 
-                        "text": "Generate title and description for this image. Strictly keep title 120 characters or less and description 500 characters or less. Return only the title and description as a JSON object: {'title': '...', 'description': '...'}"},
+                        "text": "Generate title and description for this image. Strictly keep title 120 characters or less and description 500 characters or less. Return only the title and description as a JSON object in string format: \"{'title': '...', 'description': '...'}\""},
                     {
                         "type": "image_url",
                         "image_url": {
@@ -38,4 +40,11 @@ def generate_title_and_description(image_url):
     response_text = response.choices[0].message.content
     print("response_text: ", response_text)
 
-    return response_text
+    json_string = re.search(r"\{.*\}", response_text, re.DOTALL).group()
+
+    json_string = json_string.replace("'", '"')
+
+    response_dict = json.loads(json_string)
+    print("response_dict: ", response_dict)
+
+    return response_dict
