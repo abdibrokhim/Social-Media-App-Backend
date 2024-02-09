@@ -75,3 +75,9 @@ You can test the API using the Postman collection below:
 
 `Note:` I will leave database as it is, so you can test it with some data on it.
 
+`Note:` After running the app if you see following message on you terminal:
+```
+{"app": "SOCIAL_MEDIA_SERVICE", "event": "Retrying in 1 second.", "level": "error", "timestamp": "2024-02-09 10:59:58"}
+{"app": "SOCIAL_MEDIA_SERVICE", "event": "Can't connect to ('0.0.0.0', 9000)", "level": "error", "timestamp": "2024-02-09 10:59:59"}
+```
+please, just change the port number in the `run.sh` file to another port number, for example `8000`, and then run the app again it will work fine. Also, don't forget to change the port number in the `weshot` app in the `env.dart` file on [line 4](https://github.com/abdibrokhim/weshot/blob/54f538a7fee1d66fe10d7570ecddab3c53468767/lib/utils/env.dart#L4).
